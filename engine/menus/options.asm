@@ -10,6 +10,7 @@
 DEF NUM_OPTIONS EQU const_value ; 8
 
 DisplayOptionMenu_:
+	call JoypadLowSensitivity
 	call InitOptionsMenu
 .optionMenuLoop
 	call JoypadLowSensitivity
