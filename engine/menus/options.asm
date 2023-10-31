@@ -1,5 +1,9 @@
 DisplayOptionMenu_:
+	; This line fixes the Fast Options glitch
+	; The code as written applies any direction button presses done simultaneous with selecting the menu
+	; To each option while rendering the menu
 	call JoypadLowSensitivity
+	; end of source modification
 	call InitOptionsMenu
 .optionMenuLoop
 	call JoypadLowSensitivity
