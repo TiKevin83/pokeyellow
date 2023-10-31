@@ -91,6 +91,9 @@ GetBattleTransitionID_WildOrTrainer:
 	ret
 
 GetBattleTransitionID_CompareLevels:
+	ld a, [wPartyCount]
+	cp 0
+	jr z, .highLevelEnemy
 	ld hl, wPartyMon1HP
 .faintedLoop
 	ld a, [hli]
