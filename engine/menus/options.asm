@@ -1,4 +1,5 @@
 DisplayOptionMenu_:
+	call JoypadLowSensitivity
 	call InitOptionsMenu
 .optionMenuLoop
 	call JoypadLowSensitivity
