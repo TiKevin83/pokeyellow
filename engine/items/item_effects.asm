@@ -1753,8 +1753,9 @@ ItemUsePokedoll:
 	ld a, $01
 	; Bugfix for Poke Doll Enabling a Sequence Break in Lavender Tower
 	; Marks the result of battles where poke doll is used as a loss
+IF DEF(_BUGFIX)
 	ld [wBattleResult], a
-	; end of source modification
+ENDC
 	ld [wEscapedFromBattle], a
 	jp PrintItemUseTextAndRemoveItem
 
