@@ -284,6 +284,9 @@ CalcCheckSum:
 .loop
 	ld a, [hli]
 	add d
+IF DEF(_BUGFIX)
+	rrca
+ENDC
 	ld d, a
 	dec bc
 	ld a, b

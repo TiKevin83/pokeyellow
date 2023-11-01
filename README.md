@@ -10,6 +10,11 @@ It builds the following ROMs:
 
 To set up the repository, see [**INSTALL.md**](INSTALL.md).
 
+## Bugfix Patch
+
+This version includes the ability to optionally compile with a set of bugfix patches:
+
+`make BUGFIX=1`
 
 ## See also
 
