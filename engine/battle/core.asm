@@ -4795,7 +4795,13 @@ CriticalHitTest:
 	bit GETTING_PUMPED, a        ; test for focus energy
 ; bug: using focus energy causes a shift to the right instead of left,
 ; resulting in 1/4 the usual crit chance
-IF !DEF(_BUGFIX)
+IF DEF(_BUGFIX)
+	jr z, .noFocusEnergyUsed      
+	sla b                        ; (effective (base speed/2)*2)
+	jr c, .guaranteedCriticalHit
+	sla b                        ; (effective (base speed/2)*4)
+	jr c, .guaranteedCriticalHit
+ELSE
 	jr nz, .focusEnergyUsed      
 	sla b                        ; regular moves become effective (base speed/2)*2
 	jr nc, .noFocusEnergyUsed
@@ -4803,13 +4809,6 @@ IF !DEF(_BUGFIX)
 	jr .noFocusEnergyUsed
 .focusEnergyUsed
 	srl b                        ; focus energy moves become effective (base speed/2)/2
-ENDC
-IF DEF(_BUGFIX)
-	jr z, .nofocusEnergyUsed      
-	sla b                        ; (effective (base speed/2)*2)
-	jr c, .guaranteedCriticalHit
-	sla b                        ; (effective (base speed/2)*4)
-	jr c, .guaranteedCriticalHit
 ENDC
 .noFocusEnergyUsed
 	ld hl, HighCriticalMoves     ; table of high critical hit moves
@@ -4830,21 +4829,19 @@ ENDC
 	jr .SkipHighCritical         ; continue as a normal move
 .HighCritical
 	sla b                        ; *2 for high critical hit moves - effective (base speed/2)*4)) or effective (base speed/2)*2) if bugs fixed
-IF !DEF(_BUGFIX)
+IF DEF(_BUGFIX)
+	jr c, .guaranteedCriticalHit
+ELSE
 	jr nc, .noCarry
 	ld b, $ff                    ; cap at 255/256
 .noCarry
 ENDC
+	sla b                        ; *4 for high critical moves - effective (base speed/2)*8)) or effective (base speed/2)*4) if bugs fixed
 IF DEF(_BUGFIX)
 	jr c, .guaranteedCriticalHit
-ENDC
-	sla b                        ; *4 for high critical moves - effective (base speed/2)*8)) or effective (base speed/2)*4) if bugs fixed
-IF !DEF(_BUGFIX)
+ELSE
 	jr nc, .SkipHighCritical
 	ld b, $ff
-ENDC
-IF DEF(_BUGFIX)
-	jr c, .guaranteedCriticalHit
 ENDC
 .SkipHighCritical
 ; The original code here can "gen 1 miss" a critical hit even when the chance is guaranteed
