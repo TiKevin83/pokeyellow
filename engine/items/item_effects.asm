@@ -1008,7 +1008,15 @@ ItemUseMedicine:
 	ld de, wBattleMonStats
 	ld bc, NUM_STATS * 2
 	call CopyData ; copy party stats to in-battle stat data
+; Fix broken effects of curing burn or paralysis on stats
+IF DEF(_BUGFIX)
+	xor a
+	ld [wCalculateWhoseStats], a
+	callfar CalculateModifiedStats
+	callfar ApplyBadgeStatBoosts
+ELSE
 	predef DoubleOrHalveSelectedStats
+ENDC
 	jp .doneHealing
 
 .healHP

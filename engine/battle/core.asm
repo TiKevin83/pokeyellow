@@ -6796,6 +6796,28 @@ ApplyBadgeStatBoosts:
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
 	ret z ; return if link battle
+IF DEF(_BUGFIX)
+	ld a, [wObtainedBadges]
+	ld b, a
+	ld hl, wBattleMonAttack
+; loop unrolled to fix badge boosts to match in game text
+; and the way it was fixed in FRLG
+	srl b
+	call c, .applyBoostToStat
+	ld hl, wBattleMonSpeed
+	srl b
+	srl b
+	call c, .applyBoostToStat
+	ld hl, wBattleMonDefense
+	srl b
+	srl b
+	call c, .applyBoostToStat
+	ld hl, wBattleMonSpecial
+	srl b
+	srl b 
+	call c, .applyBoostToStat
+	ret
+ELSE
 	ld a, [wObtainedBadges]
 	ld b, a
 	ld hl, wBattleMonAttack
@@ -6815,6 +6837,7 @@ ApplyBadgeStatBoosts:
 	dec c
 	jr nz, .loop
 	ret
+ENDC
 
 ; multiply stat at hl by 1.125
 ; cap stat at MAX_STAT_VALUE
