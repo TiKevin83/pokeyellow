@@ -4793,14 +4793,24 @@ CriticalHitTest:
 	ld c, [hl]                   ; read move id
 	ld a, [de]
 	bit GETTING_PUMPED, a        ; test for focus energy
-	jr nz, .focusEnergyUsed      ; bug: using focus energy causes a shift to the right instead of left,
-	                             ; resulting in 1/4 the usual crit chance
-	sla b                        ; (effective (base speed/2)*2)
+; bug: using focus energy causes a shift to the right instead of left,
+; resulting in 1/4 the usual crit chance
+IF !DEF(_BUGFIX)
+	jr nz, .focusEnergyUsed      
+	sla b                        ; regular moves become effective (base speed/2)*2
 	jr nc, .noFocusEnergyUsed
 	ld b, $ff                    ; cap at 255/256
 	jr .noFocusEnergyUsed
 .focusEnergyUsed
-	srl b
+	srl b                        ; focus energy moves become effective (base speed/2)/2
+ENDC
+IF DEF(_BUGFIX)
+	jr z, .nofocusEnergyUsed      
+	sla b                        ; (effective (base speed/2)*2)
+	jr c, .guaranteedCriticalHit
+	sla b                        ; (effective (base speed/2)*4)
+	jr c, .guaranteedCriticalHit
+ENDC
 .noFocusEnergyUsed
 	ld hl, HighCriticalMoves     ; table of high critical hit moves
 .Loop
@@ -4809,23 +4819,50 @@ CriticalHitTest:
 	jr z, .HighCritical          ; if so, the move about to be used is a high critical hit ratio move
 	inc a                        ; move on to the next move, FF terminates loop
 	jr nz, .Loop                 ; check the next move in HighCriticalMoves
+; Fixing the focus energy code reveals that the crit rate would still be capped at 50%
+; This shift can then simply be removed in a simpler implementation of fixing focus energy
+; Which would also fix the 50% cap
+; This also removes the additional 2x difference making high critical hit moves x8
+; Making High Critical Hit Chance Moves and Focus Energy a consistent x4 multiplier
+IF !DEF(_BUGFIX)
 	srl b                        ; /2 for regular move (effective (base speed / 2))
+ENDC
 	jr .SkipHighCritical         ; continue as a normal move
 .HighCritical
-	sla b                        ; *2 for high critical hit moves
+	sla b                        ; *2 for high critical hit moves - effective (base speed/2)*4)) or effective (base speed/2)*2) if bugs fixed
+IF !DEF(_BUGFIX)
 	jr nc, .noCarry
 	ld b, $ff                    ; cap at 255/256
 .noCarry
-	sla b                        ; *4 for high critical move (effective (base speed/2)*8))
+ENDC
+IF DEF(_BUGFIX)
+	jr c, .guaranteedCriticalHit
+ENDC
+	sla b                        ; *4 for high critical moves - effective (base speed/2)*8)) or effective (base speed/2)*4) if bugs fixed
+IF !DEF(_BUGFIX)
 	jr nc, .SkipHighCritical
 	ld b, $ff
+ENDC
+IF DEF(_BUGFIX)
+	jr c, .guaranteedCriticalHit
+ENDC
 .SkipHighCritical
+; The original code here can "gen 1 miss" a critical hit even when the chance is guaranteed
+IF DEF(_BUGFIX)
+	ld a, b
+	inc a ; optimization of "cp $ff"
+	jr z, .guaranteedCriticalHit
+ENDC
 	call BattleRandom            ; generates a random value, in "a"
 	rlc a
 	rlc a
 	rlc a
 	cp b                         ; check a against calculated crit rate
 	ret nc                       ; no critical hit if no borrow
+; adding this label in the bugfix code enables several optimizations
+IF DEF(_BUGFIX)
+.guaranteedCriticalHit
+ENDC
 	ld a, $1
 	ld [wCriticalHitOrOHKO], a   ; set critical hit flag
 	ret
@@ -5622,6 +5659,12 @@ MoveHitTest:
 .doAccuracyCheck
 ; if the random number generated is greater than or equal to the scaled accuracy, the move misses
 ; note that this means that even the highest accuracy is still just a 255/256 chance, not 100%
+; The following snippet is taken from Pokemon Crystal, it fixes the above bug.
+IF DEF(_BUGFIX)
+    ld a, b
+    cp $FF ; Is the value $FF?
+    ret z ; If so, we need not calculate, just so we can fix this bug.
+ENDC
 	call BattleRandom
 	cp b
 	jr nc, .moveMissed
