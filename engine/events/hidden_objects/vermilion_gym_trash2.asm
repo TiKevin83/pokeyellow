@@ -32,12 +32,24 @@ TrashCanRandom:
 	call Random
 	swap a
 	cp 1 * $ff / 3
+IF DEF(_BUGFIX)
+	ld a, 0
+ELSE
 	ld b, 0
+ENDC
 	ret c
 	cp 2 * $ff / 3
+IF DEF(_BUGFIX)
+	ld a, 1
+ELSE
 	ld b, 1
+ENDC
 	ret c
+IF DEF(_BUGFIX)
+	ld a, 2
+ELSE
 	ld b, 2
+ENDC
 	ret
 
 .four
