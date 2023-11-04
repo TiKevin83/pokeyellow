@@ -1,6 +1,8 @@
+IF !DEF(_BUGFIX)
 UnknownText_2812:: ; unreferenced
 	text_far _PokemonText
 	text_end
+ENDC
 
 ; this function is used to display sign messages, sprite dialog, etc.
 ; INPUT: [hSpriteIndexOrTextID] = sprite ID or text ID

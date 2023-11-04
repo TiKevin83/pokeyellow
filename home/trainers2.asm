@@ -42,7 +42,9 @@ IsFightingJessieJames::
 	ld de, JessieJamesPic
 	cp $2e
 	jr c, .dummy
+IF !DEF(_BUGFIX)
 	ld de, JessieJamesPic ; possibly meant to add another pic
+ENDC
 .dummy
 	ld hl, wTrainerPicPointer
 	ld a, e

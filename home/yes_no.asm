@@ -26,12 +26,14 @@ YesNoChoicePokeCenter::
 	lb bc, 8, 12
 	jr DisplayYesNoChoice
 
+IF !DEF(_BUGFIX)
 WideYesNoChoice:: ; unused
 	call SaveScreenTilesToBuffer1
 	ld a, WIDE_YES_NO_MENU
 	ld [wTwoOptionMenuID], a
 	hlcoord 12, 7
 	lb bc, 8, 13
+ENDC
 
 DisplayYesNoChoice::
 	ld a, TWO_OPTION_MENU
