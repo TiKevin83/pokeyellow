@@ -276,7 +276,9 @@ SpritePositionBankswitch::
 
 CheckForEngagingTrainers::
 	xor a ; TRAINER_EVENT_FLAG_BIT
+IF !DEF(_BUGFIX)
 	call ReadTrainerHeaderInfo
+ENDC
 	ld d, h
 	ld e, l
 .trainerLoop
