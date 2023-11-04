@@ -7,11 +7,17 @@ LoadSAV:
 ; tell the user the save is corrupt if they turned off the power while saving
 ; and carry random state through power on/off
 IF DEF(_BUGFIX)
+	call EnableSRAMAndLatchClockData
+	ld a, $1
+	ld [MBC1SRamBank], a
 	ld a, [sSaveInProgress]
 	cp 1
-	jr c, .badsum
-	ld a, [sRandomSeed]
-	ld [wRandomSeed], a
+	jr z, .badsum
+	call DisableSRAMAndPrepareClockData
+	ld a, [sRandomAdd]
+	ldh [hRandomAdd], a
+	ld a, [sRandomSub]
+	ldh [hRandomSub], a
 ENDC
 	call LoadSAV0
 	jr c, .badsum
@@ -167,15 +173,24 @@ SaveSAV:
 IF DEF(_BUGFIX)
 	ld hl, SavingText
 	call PrintText
+	call EnableSRAMAndLatchClockData
+	ld a, $1
+	ld [MBC1SRamBank], a
 	ld a, 1
 	ld [sSaveInProgress], a
-	ld a, [wRandomSeed]
-	ld [sRandomSeed], a
+	ldh a, [hRandomAdd]
+	ld [sRandomAdd], a
+	ldh a, [hRandomSub]
+	ld [sRandomSub], a
 ENDC
 	call SaveSAVtoSRAM
 IF DEF(_BUGFIX)
+	call EnableSRAMAndLatchClockData
+	ld a, $1
+	ld [MBC1SRamBank], a
 	ld a, 0
 	ld [sSaveInProgress], a
+	call DisableSRAMAndPrepareClockData
 ELSE
 	ld hl, SavingText
 	call PrintText
