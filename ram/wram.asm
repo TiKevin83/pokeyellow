@@ -1887,7 +1887,11 @@ wPseudoItemID:: db
 
 wUnusedAlreadyOwnedFlag:: db
 
+IF DEF(_BUGFIX)
+wRandomSeed:: db
+ELSE
 	ds 2
+ENDC
 
 wEvoStoneItemID:: db
 

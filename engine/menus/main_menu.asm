@@ -1,4 +1,9 @@
 MainMenu:
+; Ensure we initialize wRandomSeed if it isn't carrying over from a previous save
+IF DEF(_BUGFIX)
+	ldh a, [rDIV]
+	ld [wRandomSeed], a
+ENDC
 ; Check save file
 	call InitOptions
 	xor a

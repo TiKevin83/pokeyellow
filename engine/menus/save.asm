@@ -8,10 +8,8 @@ IF DEF(_BUGFIX)
 	ld a, [sSaveInProgress]
 	cp 1
 	jr c, .badsum
-	ld a, [sRandomAdd]
-	ldh [hRandomAdd], a
-	ld a, [sRandomSub]
-	ldh [hRandomSub], a
+	ld a, [sRandomSeed]
+	ld [wRandomSeed], a
 ENDC
 	call LoadMainData
 	jr c, .badsum
@@ -174,10 +172,8 @@ IF DEF(_BUGFIX)
 	call PrintText
 	ld a, 1
 	ld [sSaveInProgress], a
-	ldh a, [hRandomAdd]
-	ld [sRandomAdd], a
-	ldh a, [hRandomSub]
-	ld [sRandomSub], a
+	ld a, [wRandomSeed]
+	ld [sRandomSeed], a
 ENDC
 	call SaveGameData
 IF DEF(_BUGFIX)
