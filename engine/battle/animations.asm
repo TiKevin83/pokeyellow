@@ -1969,6 +1969,11 @@ AnimationWavyScreen:
 	ld c, $ff
 	ld hl, WavyScreenLineOffsets
 .loop
+; Fix the wave effect for the top 3 lines of the screen
+IF DEF(_BUGFIX)
+	ld a, [hl]
+	ldh [hSCX], a
+ENDC
 	push hl
 .innerLoop
 	call WavyScreen_SetSCX
@@ -1985,6 +1990,10 @@ AnimationWavyScreen:
 	dec c
 	jr nz, .loop
 	xor a
+; Fix the wave effect for the top 3 lines of the screen
+IF DEF(_BUGFIX)
+	ldh [hSCX], a
+ENDC
 	ldh [hWY], a
 	call SaveScreenTilesToBuffer2
 	call ClearScreen
