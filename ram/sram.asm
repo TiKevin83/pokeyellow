@@ -22,7 +22,10 @@ sCurBoxData::  ds wBoxDataEnd - wBoxDataStart
 sTileAnimations:: db
 sGameDataEnd::
 sMainDataCheckSum:: db
-
+; adding this variable allows us to track whether the user turned off the power while saving
+IF DEF(_BUGFIX)
+sSaveInProgress:: db
+ENDC
 
 ; The PC boxes will not fit into one SRAM bank,
 ; so they use multiple SECTIONs

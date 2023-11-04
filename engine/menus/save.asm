@@ -2,6 +2,12 @@ TryLoadSaveFile:
 	call ClearScreen
 	call LoadFontTilePatterns
 	call LoadTextBoxTilePatterns
+; tell the user the save is corrupt if they turned off the power while saving
+IF DEF(_BUGFIX)
+	ld a, [sSaveInProgress]
+	cp 1
+	jr c, .badsum
+ENDC
 	call LoadMainData
 	jr c, .badsum
 	call LoadCurrentBoxData
@@ -155,9 +161,22 @@ SaveMenu:
 	and a
 	ret nz
 .save
-	call SaveGameData
+; fix the order of text printing so that saving actually happens when the game says it does
+; but also load a flag into sSaveInProgress to mark if the game was turned off during saving
+IF DEF(_BUGFIX)
 	ld hl, SavingText
 	call PrintText
+	ld a, 1
+	ld [sSaveInProgress], a
+ENDC
+	call SaveGameData
+IF DEF(_BUGFIX)
+	ld a, 0
+	ld [sSaveInProgress], a
+ELSE
+	ld hl, SavingText
+	call PrintText
+ENDC
 	ld c, 128
 	call DelayFrames
 	ld hl, GameSavedText
