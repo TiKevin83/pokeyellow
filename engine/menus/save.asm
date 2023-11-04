@@ -5,10 +5,15 @@ LoadSAV:
 	call LoadFontTilePatterns
 	call LoadTextBoxTilePatterns
 ; tell the user the save is corrupt if they turned off the power while saving
+; and carry random state through power on/off
 IF DEF(_BUGFIX)
 	ld a, [sSaveInProgress]
 	cp 1
 	jr c, .badsum
+	ld a, [sRandomAdd]
+	ldh [hRandomAdd], a
+	ld a, [sRandomSub]
+	ldh [hRandomSub], a
 ENDC
 	call LoadSAV0
 	jr c, .badsum
@@ -159,12 +164,17 @@ SaveSAV:
 	ret nz
 .save
 ; fix the order of text printing so that saving actually happens when the game says it does
-; but also load a flag into sSaveInProgress to mark if the game was turned off during saving
+; also load a flag into sSaveInProgress to mark if the game was turned off during saving
+; and carry random state through power off
 IF DEF(_BUGFIX)
 	ld hl, SavingText
 	call PrintText
 	ld a, 1
 	ld [sSaveInProgress], a
+	ldh a, [hRandomAdd]
+	ld [sRandomAdd], a
+	ldh a, [hRandomSub]
+	ld [sRandomSub], a
 ENDC
 	call SaveSAVtoSRAM
 IF DEF(_BUGFIX)
