@@ -1867,7 +1867,11 @@ wPseudoItemID:: db
 
 wUnusedD153:: db
 
+IF DEF(_BUGFIX)
+wRandomSeed:: db
+ELSE
 	ds 2
+ENDC
 
 wEvoStoneItemID:: db
 
