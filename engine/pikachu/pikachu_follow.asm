@@ -1164,13 +1164,34 @@ ClearPikachuFollowCommandBuffer:
 
 AppendPikachuFollowCommandToBuffer:
 	ld hl, wPikachuFollowCommandBufferSize
+; Bugfixes for pikawalk
+; The game allocates 1+16 bytes of space for pikachu follow commands
+; But the original source has no bounds checking to ensure the buffer size
+; stays within the allocated bounds, opening up a buffer overflow exploit
+; by walking with pikachu asleep offscreen in the Pewter City Pokemon Center
+IF DEF(_BUGFIX)
+	push af
+	ld a, 17
+	cp [hl]
+	jp z, .skipAppending
+ENDC
 	inc [hl]
 	ld e, [hl]
 	ld d, 0
 	ld hl, wPikachuFollowCommandBuffer
 	add hl, de
+; restore af from the skip check
+IF DEF(_BUGFIX)
+	pop af
+ENDC
 	ld [hl], a
 	ret
+; restore af from the skip check  and return
+IF DEF(_BUGFIX)
+.skipAppending
+	pop af
+	ret
+ENDC
 
 RefreshPikachuFollow:
 	call ClearPikachuFollowCommandBuffer
