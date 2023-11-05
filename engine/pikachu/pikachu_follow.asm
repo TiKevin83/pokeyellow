@@ -1169,13 +1169,13 @@ AppendPikachuFollowCommandToBuffer:
 ; But the original source has no bounds checking to ensure the buffer size
 ; stays within the allocated bounds, opening up a buffer overflow exploit
 ; by walking with pikachu asleep offscreen in the Pewter City Pokemon Center
+    inc [hl]
 IF DEF(_BUGFIX)
 	push af
-	ld a, 17
+	ld a, 15
 	cp [hl]
-	jp z, .skipAppending
+	jp c, .skipAppending
 ENDC
-	inc [hl]
 	ld e, [hl]
 	ld d, 0
 	ld hl, wPikachuFollowCommandBuffer
