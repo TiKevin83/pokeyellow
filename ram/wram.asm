@@ -1236,8 +1236,16 @@ wEnemyHPBarColor:: db
 wPartyMenuHPBarColors:: ds PARTY_LENGTH
 
 wStatusScreenHPBarColor:: db
+IF DEF(_BUGFIX)
+	wRandomSeed:: db
+
+	ds 3
+
+ELSE
 
 	ds 7
+
+ENDC
 
 wCopyingSGBTileData::
 wWhichPartyMenuHPBar::
@@ -1887,11 +1895,7 @@ wPseudoItemID:: db
 
 wUnusedAlreadyOwnedFlag:: db
 
-IF DEF(_BUGFIX)
-wRandomSeed:: db
-ELSE
 	ds 2
-ENDC
 
 wEvoStoneItemID:: db
 
