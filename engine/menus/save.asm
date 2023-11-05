@@ -177,17 +177,19 @@ IF DEF(_BUGFIX)
 	call EnableSRAMAndLatchClockData
 	ld a, $1
 	ld [MBC1SRamBank], a
-	ld a, 1
+	xor a
+	inc a
 	ld [sSaveInProgress], a
 	ld a, [wRandomSeed]
 	ld [sRandomSeed], a
 ENDC
 	call SaveGameData
+; reset the saving in progress flag
 IF DEF(_BUGFIX)
 	call EnableSRAMAndLatchClockData
 	ld a, $1
 	ld [MBC1SRamBank], a
-	ld a, 0
+	xor a
 	ld [sSaveInProgress], a
 	call DisableSRAMAndPrepareClockData
 ELSE
@@ -320,6 +322,7 @@ CalcCheckSum:
 .loop
 	ld a, [hli]
 	add d
+; make the checksum a little more powerful
 IF DEF(_BUGFIX)
 	rrca
 ENDC
