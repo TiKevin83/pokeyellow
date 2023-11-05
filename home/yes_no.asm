@@ -5,11 +5,14 @@ YesNoChoice::
 	call InitYesNoTextBoxParameters
 	jr DisplayYesNoChoice
 
+; removed in bugfix patch to make space for trainer fly glitch fixes
+IF !DEF(_BUGFIX)
 TwoOptionMenu:: ; unreferenced
 	ld a, TWO_OPTION_MENU
 	ld [wTextBoxID], a
 	call InitYesNoTextBoxParameters
 	jp DisplayTextBoxID
+ENDC
 
 InitYesNoTextBoxParameters::
 	xor a ; YES_NO_MENU
