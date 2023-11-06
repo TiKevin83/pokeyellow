@@ -1239,7 +1239,7 @@ wStatusScreenHPBarColor:: db
 IF DEF(_BUGFIX)
 	wRandomSeed:: db
 
-	ds 3
+	ds 6
 
 ELSE
 
