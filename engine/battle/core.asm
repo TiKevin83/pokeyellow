@@ -6802,12 +6802,12 @@ ApplyBadgeStatBoosts:
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
 	ret z ; return if link battle
-IF DEF(_BUGFIX)
 	ld a, [wObtainedBadges]
 	ld b, a
 	ld hl, wBattleMonAttack
 ; loop unrolled to fix badge boosts to match in game text
 ; and the way it was fixed in FRLG
+IF DEF(_BUGFIX)
 	srl b
 	call c, .applyBoostToStat
 	ld hl, wBattleMonSpeed
@@ -6824,9 +6824,6 @@ IF DEF(_BUGFIX)
 	call c, .applyBoostToStat
 	ret
 ELSE
-	ld a, [wObtainedBadges]
-	ld b, a
-	ld hl, wBattleMonAttack
 	ld c, $4
 ; the boost is applied for badges whose bit position is even
 ; the order of boosts matches the order they are laid out in RAM
