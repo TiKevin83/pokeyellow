@@ -10,6 +10,10 @@ Route17_Object:
 	bg_event  9, 87, 14 ; Route17Text14
 	bg_event  9, 111, 15 ; Route17Text15
 	bg_event  9, 141, 16 ; Route17Text16
+; fix the sign at Route 16 showing Celadon <-> Fuchsia when read from the front
+IF DEF(_BUGFIX)
+	bg_event  5, -1, 17 ; Route17Text17
+ENDC
 
 	def_object_events
 	object_event 12, 19, SPRITE_BIKER, STAY, LEFT, 1, OPP_CUE_BALL, 4

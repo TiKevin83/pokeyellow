@@ -558,6 +558,12 @@ AIPrintItemUseAndUpdateHPBar:
 	xor a
 	ld [wHPBarType], a
 	predef UpdateHPBar2
+; fix to update enemy pokemon status HUD when healing items are used
+IF DEF(_BUGFIX)
+	push af
+	farcall DrawEnemyHUDAndHPBar
+	pop af
+ENDC
 	jp DecrementAICount
 
 AISwitchIfEnoughMons:
@@ -642,6 +648,12 @@ AICureStatus:
 	ld [wEnemyMonStatus], a ; clear status of active enemy
 	ld hl, wEnemyBattleStatus3
 	res 0, [hl]
+; fix to update enemy pokemon status HUD when healing items are used
+IF DEF(_BUGFIX)
+	push af
+	farcall DrawEnemyHUDAndHPBar
+	pop af
+ENDC
 	ret
 
 AIUseXAccuracy: ; unused

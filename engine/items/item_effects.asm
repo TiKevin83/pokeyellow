@@ -488,8 +488,13 @@ ItemUseBall:
 	ld hl, wEnemyBattleStatus3
 	bit TRANSFORMED, [hl]
 	jr z, .notTransformed
+; there's no reason to assume that a transformed pokemon is a ditto
+; if a player battles with a ditto with transform against a wild pokemon with mirror move
+; it could copy TRANSFORM and then if it uses it be caught as a ditto improperly
+IF !DEF(_BUGFIX)
 	ld a, DITTO
 	ld [wEnemyMonSpecies2], a
+ENDC
 	jr .skip6
 
 .notTransformed

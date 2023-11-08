@@ -1413,7 +1413,10 @@ AdjustOAMBlockYPos2:
 	add b
 	cp 112
 	jr c, .skipSettingPreviousEntrysAttribute
+; fix swag boulder
+IF !DEF(_BUGFIX)
 	dec hl
+ENDC
 	ld a, 160 ; bug, sets previous OAM entry's attribute
 	ld [hli], a
 .skipSettingPreviousEntrysAttribute

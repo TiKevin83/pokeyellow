@@ -2490,7 +2490,16 @@ PartyMenuOrRockOrRun:
 	ld [wd0b5], a
 	call GetMonHeader
 	ld de, vFrontPic
+; ensure we don't identify ghost encounters when reloading battle sprites
+IF DEF(_BUGFIX)
+	call IsGhostBattle
+	push af
+	call nz, LoadMonFrontSprite
+	pop af
+	call z, LoadGhostPic
+ELSE
 	call LoadMonFrontSprite
+ENDC
 	jr .enemyMonPicReloaded
 .doEnemyMonAnimation
 	ld b, BANK(AnimationSubstitute) ; BANK(AnimationMinimizeMon)
@@ -2913,6 +2922,12 @@ NoMovesLeftText:
 	text_end
 
 SwapMovesInMenu:
+; Prevent move swapping while transformed
+IF DEF(_BUGFIX)
+	ld a, [wPlayerBattleStatus3]
+	bit TRANSFORMED, a
+	jp nz, MoveSelectionMenu
+ENDC
 IF DEF(_DEBUG)
 	ld a, [wFlags_D733]
 	bit BIT_TEST_BATTLE, a
@@ -5478,6 +5493,24 @@ AdjustDamageForMoveType:
 	ld b, a
 	ld a, [hl] ; a = damage multiplier
 	ldh [hMultiplier], a
+; fix the reported type effectiveness of moves used on dual type pokemon
+IF DEF(_BUGFIX)
+	and a  ; cp NO_EFFECT
+	jr z, .gotMultiplier
+	cp NOT_VERY_EFFECTIVE
+	jr nz, .nothalf
+	ld a, [wDamageMultipliers]
+	and $7f
+	srl a
+	jr .gotMultiplier
+.nothalf
+	cp SUPER_EFFECTIVE
+	jr nz, .gotMultiplier
+	ld a, [wDamageMultipliers]
+	and $7f
+	sla a
+.gotMultiplier
+ENDC
 	add b
 	ld [wDamageMultipliers], a
 	xor a
@@ -6473,12 +6506,20 @@ LoadEnemyMonData:
 	ld a, [wEnemyMonSpecies2]
 	ld [wd11e], a
 	predef IndexToPokedex
+; avoid marking a pokemon as seen if it's not identified via the silph scope
+IF DEF(_BUGFIX)
+	call IsGhostBattle
+	jr z, .noMarkSeen
+ENDC
 	ld a, [wd11e]
 	dec a
 	ld c, a
 	ld b, FLAG_SET
 	ld hl, wPokedexSeen
 	predef FlagActionPredef ; mark this mon as seen in the pokedex
+IF DEF(_BUGFIX)
+.noMarkSeen
+ENDC
 	ld hl, wEnemyMonLevel
 	ld de, wEnemyMonUnmodifiedLevel
 	ld bc, 1 + NUM_STATS * 2
