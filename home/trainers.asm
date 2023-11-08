@@ -72,10 +72,13 @@ ReadTrainerHeaderInfo::
 	jr z, .readPointer ; read end battle text
 	cp $a
 	jr nz, .done
+; fix the end battle text (2)
+IF !DEF(_BUGFIX)
 	ld a, [hli]        ; read end battle text (2) but override the result afterwards (XXX why, bug?)
 	ld d, [hl]
 	ld e, a
 	jr .done
+ENDC
 .readPointer
 	ld a, [hli]
 	ld h, [hl]
@@ -108,6 +111,7 @@ TalkToTrainer::
 	call ReadTrainerHeaderInfo     ; print before battle text
 	call PrintText
 	ld a, $a
+; this is fixed by the bugfix in nonZeroOffset
 	call ReadTrainerHeaderInfo     ; (?) does nothing apparently (maybe bug in ReadTrainerHeaderInfo)
 	push de
 	ld a, $8

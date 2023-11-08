@@ -1241,13 +1241,21 @@ Audio1_InitPitchSlideVars:
 ; This means that the result will be 0x200 greater than it should be if the
 ; low byte of the current frequency is greater than the low byte of the
 ; target frequency.
+IF DEF(_BUGFIX)
+	push af
+	ld hl, wChannelPitchSlideTargetFrequencyHighBytes
+	add hl, bc
+	pop af
+	ld a, [hl]
+	sbc b
+ELSE
 	ld a, d
 	sbc b
 	ld d, a
-
 	ld hl, wChannelPitchSlideTargetFrequencyHighBytes
 	add hl, bc
 	ld a, [hl]
+ENDC
 	sub d
 	ld d, a
 	ld b, 0

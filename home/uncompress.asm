@@ -31,14 +31,30 @@ _UncompressSpriteData::
 	ld [wSpriteLoadFlags], a
 	call ReadNextInputByte    ; first byte of input determines sprite width (high nybble) and height (low nybble) in tiles (8x8 pixels)
 	ld b, a
+; fix glitch sprites corrupting SRAM
+IF DEF(_BUGFIX)
+	and $7
+	jr nz, .skip1
+	inc a
+.skip1
+ELSE
 	and $f
+ENDC
 	add a
 	add a
 	add a
 	ld [wSpriteHeight], a
 	ld a, b
 	swap a
+; fix glitch sprites corrupting SRAM
+IF DEF(_BUGFIX)
+	and $7
+	jr nz, .skip2
+	inc a
+.skip2
+ELSE
 	and $f
+ENDC
 	add a
 	add a
 	add a

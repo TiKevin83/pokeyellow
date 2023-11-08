@@ -1329,7 +1329,13 @@ CheckForTilePairCollisions::
 	jr .retry
 .currentTileMatchesFirstInPair
 	inc hl
+; fix performance issue in collision detection
+; the original code can continue to loop unnecessarily after finding a match in the pair
+IF DEF(_BUGFIX)
+	ld a, [hli]
+ELSE
 	ld a, [hl]
+ENDC
 	cp c
 	jr z, .foundMatch
 	jr .tilePairCollisionLoop
