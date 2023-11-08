@@ -351,10 +351,12 @@ CooltrainerMAI:
 	jp AIUseXAttack
 
 CooltrainerFAI:
-	; The intended 25% chance to consider switching will not apply.
-	; Uncomment the line below to fix this.
 	cp 25 percent + 1
-	; ret nc
+; The intended 25% chance to consider switching will not apply.
+; Uncomment the line below to fix this.
+IF DEF(_BUGFIX)
+	ret nc
+ENDC
 	ld a, 10
 	call AICheckIfHPBelowFraction
 	jp c, AIUseHyperPotion
