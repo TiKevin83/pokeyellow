@@ -248,6 +248,11 @@ PokemonTower7FWarpToMrFujiHouseScript:
 	ld [wDestinationWarpID], a
 	ld a, LAVENDER_TOWN
 	ld [wLastMap], a
+; make it possible to leave mr fuji's house directly after warping
+IF DEF(_BUGFIX)
+	ld hl, wMovementFlags
+	set BIT_STANDING_ON_WARP, [hl]
+ENDC
 	ld hl, wStatusFlags3
 	set BIT_WARP_FROM_CUR_SCRIPT, [hl]
 	ld a, SCRIPT_POKEMONTOWER7F_SCRIPT0
