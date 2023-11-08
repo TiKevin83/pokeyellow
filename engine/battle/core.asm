@@ -1228,6 +1228,11 @@ SlideDownFaintedMonPic:
 	push de
 	push hl
 	ld b, PIC_HEIGHT - 1 ; number of rows
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 .rowLoop
 	push bc
 	push hl
@@ -1252,6 +1257,12 @@ SlideDownFaintedMonPic:
 	add hl, bc
 	ld de, SevenSpacesText
 	call PlaceString
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	inc a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 	ld c, 2
 	call DelayFrames
 	pop hl
@@ -1278,6 +1289,11 @@ SlideTrainerPicOffScreen:
 	push bc
 	push hl
 	ld b, PIC_HEIGHT ; number of rows
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 .rowLoop
 	push hl
 	ldh a, [hSlideAmount]
@@ -1303,6 +1319,12 @@ SlideTrainerPicOffScreen:
 	add hl, de
 	dec b
 	jr nz, .rowLoop
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	inc a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 	ld c, 2
 	call DelayFrames
 	pop hl

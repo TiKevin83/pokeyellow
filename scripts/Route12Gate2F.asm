@@ -69,6 +69,12 @@ GateUpstairsScript_PrintIfFacingUp:
 	ld a, [wSpritePlayerStateData1FacingDirection]
 	cp SPRITE_FACING_UP
 	jr z, .up
+; fix the route 12 gate binoculars
+IF DEF(_BUGFIX)
+	ld hl, TVWrongSideText
+.up
+	call PrintText
+ELSE
 	ld a, TRUE
 	jr .done
 .up
@@ -76,4 +82,5 @@ GateUpstairsScript_PrintIfFacingUp:
 	xor a
 .done
 	ld [wDoNotWaitForButtonPressAfterDisplayingText], a
+ENDC
 	jp TextScriptEnd

@@ -66,10 +66,13 @@ ReadTrainerHeaderInfo::
 	jr z, .readPointer
 	cp TRAINER_LOST_BATTLE_TEXT
 	jr nz, .done
+; fix the end battle text (2)
+IF !DEF(_BUGFIX)
 	ld a, [hli] ; TRAINER_LOST_BATTLE_TEXT pointer is overwritten afterwards (XXX why, bug?)
 	ld d, [hl]
 	ld e, a
 	jr .done
+ENDC
 .readPointer
 	ld a, [hli]
 	ld h, [hl]
