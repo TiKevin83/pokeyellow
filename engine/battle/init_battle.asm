@@ -60,9 +60,6 @@ InitBattleCommon:
 ; fixes for identifying ghosts via entering and leaving menus
 IF DEF(_BUGFIX)
 LoadGhostPic:
-	callfar IsGhostBattle
-	jr nz, .isNoGhost
-.isGhost
 	ld hl, wMonHSpriteDim
 	ld a, $66
 	ld [hli], a   ; write sprite dimensions
@@ -90,13 +87,13 @@ InitWildBattle:
 	ld a, [wCurOpponent]
 	cp RESTLESS_SOUL
 	jr z, .isGhost
+	callfar IsGhostBattle
+	jr nz, .isNoGhost
+.isGhost
 ; fixes for identifying ghosts via entering and leaving menus
 IF DEF(_BUGFIX)
 	call LoadGhostPic
 ELSE
-	callfar IsGhostBattle
-	jr nz, .isNoGhost
-.isGhost
 	ld hl, wMonHSpriteDim
 	ld a, $66
 	ld [hli], a   ; write sprite dimensions

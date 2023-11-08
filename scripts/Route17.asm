@@ -31,6 +31,10 @@ Route17_TextPointers:
 	dw_const Route17SignText,                TEXT_ROUTE17_SIGN
 	dw_const Route17NoticeSign2Text,         TEXT_ROUTE17_NOTICE_SIGN2
 	dw_const Route17CyclingRoadEndsSignText, TEXT_ROUTE17_CYCLING_ROAD_ENDS_SIGN
+; fix the sign at Route 16 showing Celadon <-> Fuchsia when read from the front
+IF DEF(_BUGFIX)
+	dw Route17Text17
+ENDC
 
 Route17TrainerHeaders:
 	def_trainers
@@ -259,3 +263,9 @@ Route17NoticeSign2Text:
 Route17CyclingRoadEndsSignText:
 	text_far _Route17CyclingRoadEndsSignText
 	text_end
+; fix the sign at Route 16 showing Celadon <-> Fuchsia when read from the front
+IF DEF(_BUGFIX)
+Route17Text17:
+	text_far _Route16Text9
+	text_end
+ENDC
