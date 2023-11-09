@@ -26,15 +26,13 @@ IF DEF(_BUGFIX)
 ; ported from https://github.com/edrosten/8bit_rng
 XorshiftRandom:
     push bc
-    ldh a, [rDIV]
-    rra ; shift into carry
     ld hl, wRandomSeed
     ld a, [hl] ; read in x
     ; x << 4
     add a
     add a
     add a
-    adc a ; this mixes in 1 bit of rDIV into RNG
+    add a
     xor [hl]
     ld b, a ; t = x ^ (x << 4)
     ld hl, wRandomSeed + 3
@@ -51,9 +49,9 @@ XorshiftRandom:
     ; b contains t
     ; a/c contains z
     xor b ; z ^ t
-    rr c ; (z >> 1)
+    srl c ; (z >> 1)
     xor c ; z ^ t ^ (z >> 1)
-    rl b ; (t << 1)
+    sla b ; (t << 1)
     xor b ; z ^ t ^ (z >> 1) ^ (t << 1)
     ld [wRandomSeed + 3], a
     pop bc

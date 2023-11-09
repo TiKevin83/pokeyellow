@@ -26,6 +26,9 @@ sMainDataCheckSum:: db
 IF DEF(_BUGFIX)
 sSaveInProgress:: db
 sRandomSeed:: db
+	
+	ds 3
+
 ENDC
 
 ; The PC boxes will not fit into one SRAM bank,
