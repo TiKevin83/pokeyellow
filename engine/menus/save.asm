@@ -15,6 +15,12 @@ IF DEF(_BUGFIX)
 	jr z, .badsum
 	ld a, [sRandomSeed]
 	ld [wRandomSeed], a
+	ld a, [sRandomSeed+1]
+	ld [wRandomSeed+1], a
+	ld a, [sRandomSeed+2]
+	ld [wRandomSeed+2], a
+	ld a, [sRandomSeed+3]
+	ld [wRandomSeed+3], a
 	call DisableSRAMAndPrepareClockData
 ENDC
 	call LoadSAV0
@@ -179,6 +185,12 @@ IF DEF(_BUGFIX)
 	ld [sSaveInProgress], a
 	ld a, [wRandomSeed]
 	ld [sRandomSeed], a
+	ld a, [wRandomSeed+1]
+	ld [sRandomSeed+1], a
+	ld a, [wRandomSeed+2]
+	ld [sRandomSeed+2], a
+	ld a, [wRandomSeed+3]
+	ld [sRandomSeed+3], a
 ENDC
 	call SaveSAVtoSRAM
 ; reset the saving in progress flag 
