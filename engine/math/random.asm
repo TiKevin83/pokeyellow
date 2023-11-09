@@ -23,6 +23,7 @@ ENDC
 
 IF DEF(_BUGFIX)
 ; luckytyphlosion implementation of xorshift prng
+; ported from https://github.com/edrosten/8bit_rng
 XorshiftRandom:
     push bc
     ldh a, [rDIV]
@@ -43,8 +44,8 @@ XorshiftRandom:
     ld a, c
     ld c, [hl] ; read in y
     ld [hld], a ; y = old z
+    ld [hl], c ; x = y 
     ld c, a
-    ld [hl], a ; x = y
     ; hl = y
     ; vars
     ; b contains t
