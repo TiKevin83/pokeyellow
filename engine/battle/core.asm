@@ -5710,7 +5710,14 @@ ENDC
 	ret nz ; if so, always hit regardless of accuracy/evasion
 .calcHitChance
 	call CalcHitChance ; scale the move accuracy according to attacker's accuracy and target's evasion
+; In the original code, wPlayerMoveAccuracy is not reset each turn before being scaled
+; which affects multi turn moves like Rage and Thrash which don't reload the accuracy between turns
+; we load explicitly from a separate scaled variable here to fix this
+IF DEF(_BUGFIX)
+	ld a, [wScaledPlayerMoveAccuracy]
+ELSE
 	ld a, [wPlayerMoveAccuracy]
+ENDC
 	ld b, a
 	ldh a, [hWhoseTurn]
 	and a
@@ -5751,7 +5758,16 @@ ENDC
 
 ; values for player turn
 CalcHitChance:
+; In the original code, wPlayerMoveAccuracy is not reset each turn before being scaled
+; which affects multi turn moves like Rage and Thrash which don't reload the accuracy between turns
+; we explicitly reset the scaled accuracy from wPlayerMoveAccuracy each turn here to fix this
+IF DEF(_BUGFIX)
+	ld a, [wPlayerMoveAccuracy]
+	ld [wScaledPlayerMoveAccuracy], a
+	ld hl, wScaledPlayerMoveAccuracy
+ELSE
 	ld hl, wPlayerMoveAccuracy
+ENDC
 	ldh a, [hWhoseTurn]
 	and a
 	ld a, [wPlayerMonAccuracyMod]
