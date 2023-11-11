@@ -1237,9 +1237,11 @@ wPartyMenuHPBarColors:: ds PARTY_LENGTH
 
 wStatusScreenHPBarColor:: db
 IF DEF(_BUGFIX)
-	wRandomSeed:: db
+wRandomSeed:: db
 
-	ds 6
+	ds 5
+
+wScaledPlayerMoveAccuracy:: db
 
 ELSE
 
