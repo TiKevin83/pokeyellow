@@ -531,12 +531,16 @@ UpdateStatDone:
 	pop af
 	call nz, Bankswitch
 .applyBadgeBoostsAndStatusPenalties
-	ldh a, [hWhoseTurn]
-	and a
 ; Prevent reapplication of badge boosts
 IF DEF(_BUGFIX)
+	xor a
+	ld [wCalculateWhoseStats], a
+	ldh a, [hWhoseTurn]
+	and a
 	call z, CalculateModifiedStats
 ENDC
+	ldh a, [hWhoseTurn]
+	and a
 	call z, ApplyBadgeStatBoosts ; whenever the player uses a stat-up move, badge boosts get reapplied again to every stat,
 	                             ; even to those not affected by the stat-up move (will be boosted further)
 	ld hl, MonsStatsRoseText
@@ -730,6 +734,8 @@ UpdateLoweredStatDone:
 ; Prevent reapplication of badge boosts
 IF DEF(_BUGFIX)
 	call nz, CalculateModifiedStats
+	ldh a, [hWhoseTurn]
+	and a
 ENDC
 	call nz, ApplyBadgeStatBoosts ; whenever the player uses a stat-down move, badge boosts get reapplied again to every stat,
 	                              ; even to those not affected by the stat-up move (will be boosted further)
