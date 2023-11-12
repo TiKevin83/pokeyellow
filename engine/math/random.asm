@@ -39,10 +39,11 @@ XorshiftRandom:
     ld a, [hld] ; read in a ; hl = +2
     ld c, [hl] ; read in z ; hl = +2
     ld [hld], a ; z = a ; hl = +1
-    ld a, c
+    ld a, c ; move z to a
     ld c, [hl] ; read in y
     ld [hld], a ; y = old z
-    ld [hl], c ; x = y 
+    ld [hl], c ; x = y
+    ld a, [wRandomSeed+2]
     ld c, a
     ; hl = y
     ; vars
