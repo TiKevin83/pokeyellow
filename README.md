@@ -1,4 +1,4 @@
-# Pokémon Yellow [![Build Status][ci-badge]][ci]
+# Pokémon Yellow Fort Knox Edition [![Build Status][ci-badge]][ci]
 
 This is a disassembly of Pokémon Yellow.
 
@@ -10,9 +10,9 @@ It builds the following ROMs:
 
 To set up the repository, see [**INSTALL.md**](INSTALL.md).
 
-## Bugfix Patch
+## Fort Knox Edition
 
-This version includes the ability to optionally compile with a set of bugfix patches:
+This version includes the ability to optionally compile with a set of bugfix patches I'm calling Fort Knox Edition:
 
 `make BUGFIX=1`
 
