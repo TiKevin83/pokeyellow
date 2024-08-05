@@ -56,18 +56,9 @@ InitBattleCommon:
 	jp z, _InitBattleCommon
 	callabd_ModifyPikachuHappiness PIKAHAPPY_GYMLEADER ; useless since already in bank3d
 	jp _InitBattleCommon
-
-InitWildBattle:
-	ld a, $1
-	ld [wIsInBattle], a
-	callfar LoadEnemyMonData
-	callfar DoBattleTransitionAndInitBattleVariables
-	ld a, [wCurOpponent]
-	cp RESTLESS_SOUL
-	jr z, .isGhost
-	callfar IsGhostBattle
-	jr nz, .isNoGhost
-.isGhost
+; fixes for identifying ghosts via entering and leaving menus
+IF DEF(_BUGFIX)
+LoadGhostPic:
 	ld hl, wMonHSpriteDim
 	ld a, $66
 	ld [hli], a   ; write sprite dimensions
@@ -95,6 +86,51 @@ InitWildBattle:
 	call LoadMonFrontSprite ; load ghost sprite
 	pop af
 	ld [wcf91], a
+	ret
+ENDC
+InitWildBattle:
+	ld a, $1
+	ld [wIsInBattle], a
+	callfar LoadEnemyMonData
+	callfar DoBattleTransitionAndInitBattleVariables
+	ld a, [wCurOpponent]
+	cp RESTLESS_SOUL
+	jr z, .isGhost
+	callfar IsGhostBattle
+	jr nz, .isNoGhost
+.isGhost
+; fixes for identifying ghosts via entering and leaving menus
+IF DEF(_BUGFIX)
+	call LoadGhostPic
+ELSE
+	ld hl, wMonHSpriteDim
+	ld a, $66
+	ld [hli], a   ; write sprite dimensions
+	ld bc, GhostPic
+	ld a, c
+	ld [hli], a   ; write front sprite pointer
+	ld [hl], b
+	ld hl, wEnemyMonNick  ; set name to "GHOST"
+	ld a, "G"
+	ld [hli], a
+	ld a, "H"
+	ld [hli], a
+	ld a, "O"
+	ld [hli], a
+	ld a, "S"
+	ld [hli], a
+	ld a, "T"
+	ld [hli], a
+	ld [hl], "@"
+	ld a, [wcf91]
+	push af
+	ld a, MON_GHOST
+	ld [wcf91], a
+	ld de, vFrontPic
+	call LoadMonFrontSprite ; load ghost sprite
+	pop af
+	ld [wcf91], a
+ENDC
 	jr .spriteLoaded
 .isNoGhost
 	ld de, vFrontPic

@@ -488,8 +488,13 @@ ItemUseBall:
 	ld hl, wEnemyBattleStatus3
 	bit TRANSFORMED, [hl]
 	jr z, .notTransformed
+; there's no reason to assume that a transformed pokemon is a ditto
+; if a player battles with a ditto with transform against a wild pokemon with mirror move
+; it could copy TRANSFORM and then if it uses it be caught as a ditto improperly
+IF !DEF(_BUGFIX)
 	ld a, DITTO
 	ld [wEnemyMonSpecies2], a
+ENDC
 	jr .skip6
 
 .notTransformed
@@ -1008,7 +1013,15 @@ ItemUseMedicine:
 	ld de, wBattleMonStats
 	ld bc, NUM_STATS * 2
 	call CopyData ; copy party stats to in-battle stat data
+; Fix broken effects of curing burn or paralysis on stats
+IF DEF(_BUGFIX)
+	xor a
+	ld [wCalculateWhoseStats], a
+	callfar CalculateModifiedStats
+	callfar ApplyBadgeStatBoosts
+ELSE
 	predef DoubleOrHalveSelectedStats
+ENDC
 	jp .doneHealing
 
 .healHP
@@ -1751,6 +1764,11 @@ ItemUsePokedoll:
 	dec a
 	jp nz, ItemUseNotTime
 	ld a, $01
+	; Bugfix for Poke Doll Enabling a Sequence Break in Lavender Tower
+	; Marks the result of battles where poke doll is used as a loss
+IF DEF(_BUGFIX)
+	ld [wBattleResult], a
+ENDC
 	ld [wEscapedFromBattle], a
 	jp PrintItemUseTextAndRemoveItem
 

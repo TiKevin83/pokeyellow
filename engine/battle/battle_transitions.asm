@@ -91,6 +91,13 @@ GetBattleTransitionID_WildOrTrainer:
 	ret
 
 GetBattleTransitionID_CompareLevels:
+	; This section fixes undefined behavior in the Pikachu cutscene
+	; Due to not yet having obtained a pokemon
+IF DEF(_BUGFIX)
+	ld a, [wPartyCount]
+	cp 0
+	jr z, .highLevelEnemy
+ENDC
 	ld hl, wPartyMon1HP
 .faintedLoop
 	ld a, [hli]

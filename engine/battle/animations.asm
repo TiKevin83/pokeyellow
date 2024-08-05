@@ -1413,7 +1413,10 @@ AdjustOAMBlockYPos2:
 	add b
 	cp 112
 	jr c, .skipSettingPreviousEntrysAttribute
+; fix swag boulder
+IF !DEF(_BUGFIX)
 	dec hl
+ENDC
 	ld a, 160 ; bug, sets previous OAM entry's attribute
 	ld [hli], a
 .skipSettingPreviousEntrysAttribute
@@ -1931,7 +1934,11 @@ _AnimationSlideMonOff:
 	sub 7
 ; This has the same problem as above, but it has no visible effect because
 ; the lower right tile is in the first column to slide off the screen.
+IF DEF(_BUGFIX)
+	cp $31
+ELSE
 	cp $30
+ENDC
 	ret c
 	ld a, " "
 	ret
@@ -1969,6 +1976,11 @@ AnimationWavyScreen:
 	ld c, $ff
 	ld hl, WavyScreenLineOffsets
 .loop
+; Fix the wave effect for the top 3 lines of the screen
+IF DEF(_BUGFIX)
+	ld a, [hl]
+	ldh [hSCX], a
+ENDC
 	push hl
 .innerLoop
 	call WavyScreen_SetSCX
@@ -1985,6 +1997,10 @@ AnimationWavyScreen:
 	dec c
 	jr nz, .loop
 	xor a
+; Fix the wave effect for the top 3 lines of the screen
+IF DEF(_BUGFIX)
+	ldh [hSCX], a
+ENDC
 	ldh [hWY], a
 	call SaveScreenTilesToBuffer2
 	call ClearScreen

@@ -1205,8 +1205,18 @@ ENDU
 wPartyMenuHPBarColors:: ds PARTY_LENGTH
 
 wStatusScreenHPBarColor:: db
+IF DEF(_BUGFIX)
+wRandomSeed:: db
+
+	ds 5
+
+wScaledPlayerMoveAccuracy:: db
+
+ELSE
 
 	ds 7
+
+ENDC
 
 wCopyingSGBTileData::
 wWhichPartyMenuHPBar::

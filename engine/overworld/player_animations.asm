@@ -90,6 +90,10 @@ PlayerSpinWhileMovingDown:
 	ld [hli], a ; wPlayerSpinWhileMovingUpOrDownAnimMaxY
 	call GetPlayerTeleportAnimFrameDelay
 	ld [hl], a ; wPlayerSpinWhileMovingUpOrDownAnimFrameDelay
+; fix a garbage text character appearing instead of the spinning animation when using escape rope
+IF DEF(_BUGFIX)
+	ld hl, wFacingDirectionList
+ENDC
 	jp PlayerSpinWhileMovingUpOrDown
 
 
@@ -112,6 +116,10 @@ _LeaveMapAnim::
 	ld [hli], a ; wPlayerSpinWhileMovingUpOrDownAnimMaxY
 	call GetPlayerTeleportAnimFrameDelay
 	ld [hl], a ; wPlayerSpinWhileMovingUpOrDownAnimFrameDelay
+; fix a garbage text character appearing instead of the spinning animation when using escape rope
+IF DEF(_BUGFIX)
+	ld hl, wFacingDirectionList
+ENDC
 	call PlayerSpinWhileMovingUpOrDown
 	call IsPlayerStandingOnWarpPadOrHole
 	ld a, b
@@ -206,6 +214,12 @@ FlyAnimationScreenCoords2:
 	db $F0, $00
 
 LeaveMapThroughHoleAnim:
+; reset the music after falling through a hole on a bicycle
+IF DEF(_BUGFIX)
+	ld a, [wLastMusicSoundID]
+	cp MUSIC_BIKE_RIDING
+	call z, PlayDefaultMusic
+ENDC
 	ld a, $ff
 	ld [wUpdateSpritesEnabled], a ; disable UpdateSprites
 	; shift upper half of player's sprite down 8 pixels and hide lower half

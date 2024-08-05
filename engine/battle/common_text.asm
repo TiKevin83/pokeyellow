@@ -200,6 +200,10 @@ PlayerMon2Text:
 	ld b, [hl]
 	ld a, [de]
 	sbc b
+; original code ignores underflow, if we underflow, print default text
+IF DEF(_BUGFIX)
+	jr c, .gainedHP
+ENDC
 	ldh [hMultiplicand + 1], a
 	ld a, 25
 	ldh [hMultiplier], a
@@ -234,6 +238,14 @@ PlayerMon2Text:
 	ret c
 	ld hl, GoodText ; HP went down 70% or more
 	ret
+; fallback to default text for underflow
+IF DEF(_BUGFIX)
+.gainedHP
+	pop bc
+	pop de
+	ld hl, EnoughText 
+	ret
+ENDC
 
 EnoughText:
 	text_far _EnoughText

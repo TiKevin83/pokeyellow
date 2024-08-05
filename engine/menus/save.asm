@@ -4,6 +4,25 @@ LoadSAV:
 	call ClearScreen
 	call LoadFontTilePatterns
 	call LoadTextBoxTilePatterns
+; tell the user the save is corrupt if they turned off the power while saving
+; and carry random state through power on/off
+IF DEF(_BUGFIX)
+	call EnableSRAMAndLatchClockData
+	ld a, $1
+	ld [MBC1SRamBank], a
+	ld a, [sSaveInProgress]
+	cp 1
+	jr z, .badsum
+	ld a, [sRandomSeed]
+	ld [wRandomSeed], a
+	ld a, [sRandomSeed+1]
+	ld [wRandomSeed+1], a
+	ld a, [sRandomSeed+2]
+	ld [wRandomSeed+2], a
+	ld a, [sRandomSeed+3]
+	ld [wRandomSeed+3], a
+	call DisableSRAMAndPrepareClockData
+ENDC
 	call LoadSAV0
 	jr c, .badsum
 	call LoadSAV1
@@ -152,9 +171,40 @@ SaveSAV:
 	and a
 	ret nz
 .save
-	call SaveSAVtoSRAM
+; fix the order of text printing so that saving actually happens when the game says it does
+; also load a flag into sSaveInProgress to mark if the game was turned off during saving
+; and carry random state through power off
+IF DEF(_BUGFIX)
 	ld hl, SavingText
 	call PrintText
+	call EnableSRAMAndLatchClockData
+	ld a, $1
+	ld [MBC1SRamBank], a
+	xor a
+	inc a
+	ld [sSaveInProgress], a
+	ld a, [wRandomSeed]
+	ld [sRandomSeed], a
+	ld a, [wRandomSeed+1]
+	ld [sRandomSeed+1], a
+	ld a, [wRandomSeed+2]
+	ld [sRandomSeed+2], a
+	ld a, [wRandomSeed+3]
+	ld [sRandomSeed+3], a
+ENDC
+	call SaveSAVtoSRAM
+; reset the saving in progress flag 
+IF DEF(_BUGFIX)
+	call EnableSRAMAndLatchClockData
+	ld a, $1
+	ld [MBC1SRamBank], a
+	xor a
+	ld [sSaveInProgress], a
+	call DisableSRAMAndPrepareClockData
+ELSE
+	ld hl, SavingText
+	call PrintText
+ENDC
 	ld c, 128
 	call DelayFrames
 	ld hl, GameSavedText
@@ -278,6 +328,10 @@ SAVCheckSum:
 .loop
 	ld a, [hli]
 	add d
+; make the checksum a little more powerful
+IF DEF(_BUGFIX)
+	rrca
+ENDC
 	ld d, a
 	dec bc
 	ld a, b

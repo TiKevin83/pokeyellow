@@ -1,7 +1,12 @@
 AnimateHealingMachine:
 	ld de, PokeCenterFlashingMonitorAndHealBall
 	ld hl, vChars0 tile $7c
-	lb bc, BANK(PokeCenterFlashingMonitorAndHealBall), 3 ; should be 2
+; fix an animation in the healing machine
+IF DEF(_BUGFIX)
+	lb bc, BANK(PokeCenterFlashingMonitorAndHealBall), 2
+ELSE
+	lb bc, BANK(PokeCenterFlashingMonitorAndHealBall), 3
+ENDC
 	call CopyVideoData
 	ld hl, wUpdateSpritesEnabled
 	ld a, [hl]

@@ -1,4 +1,4 @@
-# Pokémon Yellow [![Build Status][ci-badge]][ci]
+# Pokémon Yellow Fort Knox Edition [![Build Status][ci-badge]][ci]
 
 This is a disassembly of Pokémon Yellow.
 
@@ -10,6 +10,13 @@ It builds the following ROMs:
 
 To set up the repository, see [**INSTALL.md**](INSTALL.md).
 
+## Fort Knox Edition
+
+This version includes the ability to optionally compile with a set of bugfix patches I'm calling Fort Knox Edition:
+
+`make BUGFIX=1`
+
+Many of these patches are sourced from the research done on [pokered](https://github.com/pret/pokered/wiki/%5BARCHIVED%5D-Bugs-and-Glitches) which is now defunct and archived. Some patches were also written specifically for this project (badge boosts, fast options) and some were collaborations with other Pokemon Speedrun community members including CasualPokePlayer and luckytyphlosion (statistically validated PRNG).
 
 ## See also
 

@@ -580,12 +580,22 @@ CanWalkOntoTile:
 	ld a, [hli]        ; x#SPRITESTATEDATA1_YPIXELS
 	add $4             ; align to blocks (Y pos is always 4 pixels off)
 	add d              ; add Y delta
+; fix the bottom row of the screen being treated as offscreen
+IF DEF(_BUGFIX)
+	cp $81
+ELSE
 	cp $80             ; if value is >$80, the destination is off screen (either $81 or $FF underflow)
+ENDC
 	jr nc, .impassable ; don't walk off screen
 	inc l
 	ld a, [hl]         ; x#SPRITESTATEDATA1_XPIXELS
 	add e              ; add X delta
+; fix the rightmost column of the screen being treated as offscreen
+IF DEF(_BUGFIX)
+	cp $91
+ELSE
 	cp $90             ; if value is >$90, the destination is off screen (either $91 or $FF underflow)
+ENDC
 	jr nc, .impassable ; don't walk off screen
 	push de
 	push bc

@@ -1228,6 +1228,11 @@ SlideDownFaintedMonPic:
 	push de
 	push hl
 	ld b, 6 ; number of rows
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 .rowLoop
 	push bc
 	push hl
@@ -1252,6 +1257,12 @@ SlideDownFaintedMonPic:
 	add hl, bc
 	ld de, SevenSpacesText
 	call PlaceString
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	inc a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 	ld c, 2
 	call DelayFrames
 	pop hl
@@ -1277,6 +1288,11 @@ SlideTrainerPicOffScreen:
 	push bc
 	push hl
 	ld b, 7 ; number of rows
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 .rowLoop
 	push hl
 	ldh a, [hSlideAmount]
@@ -1302,6 +1318,12 @@ SlideTrainerPicOffScreen:
 	add hl, de
 	dec b
 	jr nz, .rowLoop
+; fix tearing during sliding animations
+IF DEF(_BUGFIX)
+	xor a
+	inc a
+	ld [hAutoBGTransferEnabled], a
+ENDC
 	ld c, 2
 	call DelayFrames
 	pop hl
@@ -2490,7 +2512,16 @@ PartyMenuOrRockOrRun:
 	ld [wd0b5], a
 	call GetMonHeader
 	ld de, vFrontPic
+; ensure we don't identify ghost encounters when reloading battle sprites
+IF DEF(_BUGFIX)
+	call IsGhostBattle
+	push af
+	call nz, LoadMonFrontSprite
+	pop af
+	call z, LoadGhostPic
+ELSE
 	call LoadMonFrontSprite
+ENDC
 	jr .enemyMonPicReloaded
 .doEnemyMonAnimation
 	ld b, BANK(AnimationSubstitute) ; BANK(AnimationMinimizeMon)
@@ -2913,6 +2944,12 @@ NoMovesLeftText:
 	text_end
 
 SwapMovesInMenu:
+; Prevent move swapping while transformed
+IF DEF(_BUGFIX)
+	ld a, [wPlayerBattleStatus3]
+	bit TRANSFORMED, a
+	jp nz, MoveSelectionMenu
+ENDC
 IF DEF(_DEBUG)
 	ld a, [wFlags_D733]
 	bit BIT_TEST_BATTLE, a
@@ -3617,8 +3654,14 @@ CheckPlayerStatusConditions:
 .MonHurtItselfOrFullyParalysed
 	ld hl, wPlayerBattleStatus1
 	ld a, [hl]
+	
+IF DEF(_BUGFIX)
+	; the original code forgot to clear the invulnerability status of Fly or Dig
+	and ~((1 << STORING_ENERGY) | (1 << THRASHING_ABOUT) | (1 << CHARGING_UP) | (1 << USING_TRAPPING_MOVE) | (1 << INVULNERABLE))
+ELSE
 	; clear bide, thrashing, charging up, and trapping moves such as warp (already cleared for confusion damage)
 	and ~((1 << STORING_ENERGY) | (1 << THRASHING_ABOUT) | (1 << CHARGING_UP) | (1 << USING_TRAPPING_MOVE))
+ENDC
 	ld [hl], a
 	ld a, [wPlayerMoveEffect]
 	cp FLY_EFFECT
@@ -4793,14 +4836,23 @@ CriticalHitTest:
 	ld c, [hl]                   ; read move id
 	ld a, [de]
 	bit GETTING_PUMPED, a        ; test for focus energy
-	jr nz, .focusEnergyUsed      ; bug: using focus energy causes a shift to the right instead of left,
-	                             ; resulting in 1/4 the usual crit chance
+; bug: using focus energy causes a shift to the right instead of left,
+; resulting in 1/4 the usual crit chance
+IF DEF(_BUGFIX)
+	jr z, .noFocusEnergyUsed      
 	sla b                        ; (effective (base speed/2)*2)
+	jr c, .guaranteedCriticalHit
+	sla b                        ; (effective (base speed/2)*4)
+	jr c, .guaranteedCriticalHit
+ELSE
+	jr nz, .focusEnergyUsed      
+	sla b                        ; regular moves become effective (base speed/2)*2
 	jr nc, .noFocusEnergyUsed
 	ld b, $ff                    ; cap at 255/256
 	jr .noFocusEnergyUsed
 .focusEnergyUsed
-	srl b
+	srl b                        ; focus energy moves become effective (base speed/2)/2
+ENDC
 .noFocusEnergyUsed
 	ld hl, HighCriticalMoves     ; table of high critical hit moves
 .Loop
@@ -4809,23 +4861,48 @@ CriticalHitTest:
 	jr z, .HighCritical          ; if so, the move about to be used is a high critical hit ratio move
 	inc a                        ; move on to the next move, FF terminates loop
 	jr nz, .Loop                 ; check the next move in HighCriticalMoves
+; Fixing the focus energy code reveals that the crit rate would still be capped at 50%
+; This shift can then simply be removed in a simpler implementation of fixing focus energy
+; Which would also fix the 50% cap
+; This also removes the additional 2x difference making high critical hit moves x8
+; Making High Critical Hit Chance Moves and Focus Energy a consistent x4 multiplier
+IF !DEF(_BUGFIX)
 	srl b                        ; /2 for regular move (effective (base speed / 2))
+ENDC
 	jr .SkipHighCritical         ; continue as a normal move
 .HighCritical
-	sla b                        ; *2 for high critical hit moves
+	sla b                        ; *2 for high critical hit moves - effective (base speed/2)*4)) or effective (base speed/2)*2) if bugs fixed
+IF DEF(_BUGFIX)
+	jr c, .guaranteedCriticalHit
+ELSE
 	jr nc, .noCarry
 	ld b, $ff                    ; cap at 255/256
 .noCarry
-	sla b                        ; *4 for high critical move (effective (base speed/2)*8))
+ENDC
+	sla b                        ; *4 for high critical moves - effective (base speed/2)*8)) or effective (base speed/2)*4) if bugs fixed
+IF DEF(_BUGFIX)
+	jr c, .guaranteedCriticalHit
+ELSE
 	jr nc, .SkipHighCritical
 	ld b, $ff
+ENDC
 .SkipHighCritical
+; The original code here can "gen 1 miss" a critical hit even when the chance is guaranteed
+IF DEF(_BUGFIX)
+	ld a, b
+	inc a ; optimization of "cp $ff"
+	jr z, .guaranteedCriticalHit
+ENDC
 	call BattleRandom            ; generates a random value, in "a"
 	rlc a
 	rlc a
 	rlc a
 	cp b                         ; check a against calculated crit rate
 	ret nc                       ; no critical hit if no borrow
+; adding this label in the bugfix code enables several optimizations
+IF DEF(_BUGFIX)
+.guaranteedCriticalHit
+ENDC
 	ld a, $1
 	ld [wCriticalHitOrOHKO], a   ; set critical hit flag
 	ret
@@ -5438,6 +5515,24 @@ AdjustDamageForMoveType:
 	ld b, a
 	ld a, [hl] ; a = damage multiplier
 	ldh [hMultiplier], a
+; fix the reported type effectiveness of moves used on dual type pokemon
+IF DEF(_BUGFIX)
+	and a  ; cp NO_EFFECT
+	jr z, .gotMultiplier
+	cp NOT_VERY_EFFECTIVE
+	jr nz, .nothalf
+	ld a, [wDamageMultipliers]
+	and $7f
+	srl a
+	jr .gotMultiplier
+.nothalf
+	cp SUPER_EFFECTIVE
+	jr nz, .gotMultiplier
+	ld a, [wDamageMultipliers]
+	and $7f
+	sla a
+.gotMultiplier
+ENDC
 	add b
 	ld [wDamageMultipliers], a
 	xor a
@@ -5612,7 +5707,14 @@ MoveHitTest:
 	ret nz ; if so, always hit regardless of accuracy/evasion
 .calcHitChance
 	call CalcHitChance ; scale the move accuracy according to attacker's accuracy and target's evasion
+; In the original code, wPlayerMoveAccuracy is not reset each turn before being scaled
+; which affects multi turn moves like Rage and Thrash which don't reload the accuracy between turns
+; we load explicitly from a separate scaled variable here to fix this
+IF DEF(_BUGFIX)
+	ld a, [wScaledPlayerMoveAccuracy]
+ELSE
 	ld a, [wPlayerMoveAccuracy]
+ENDC
 	ld b, a
 	ldh a, [hWhoseTurn]
 	and a
@@ -5622,6 +5724,12 @@ MoveHitTest:
 .doAccuracyCheck
 ; if the random number generated is greater than or equal to the scaled accuracy, the move misses
 ; note that this means that even the highest accuracy is still just a 255/256 chance, not 100%
+; The following snippet is taken from Pokemon Crystal, it fixes the above bug.
+IF DEF(_BUGFIX)
+    ld a, b
+    cp $FF ; Is the value $FF?
+    ret z ; If so, we need not calculate, just so we can fix this bug.
+ENDC
 	call BattleRandom
 	cp b
 	jr nc, .moveMissed
@@ -5647,7 +5755,16 @@ MoveHitTest:
 
 ; values for player turn
 CalcHitChance:
+; In the original code, wPlayerMoveAccuracy is not reset each turn before being scaled
+; which affects multi turn moves like Rage and Thrash which don't reload the accuracy between turns
+; we explicitly reset the scaled accuracy from wPlayerMoveAccuracy each turn here to fix this
+IF DEF(_BUGFIX)
+	ld a, [wPlayerMoveAccuracy]
+	ld [wScaledPlayerMoveAccuracy], a
+	ld hl, wScaledPlayerMoveAccuracy
+ELSE
 	ld hl, wPlayerMoveAccuracy
+ENDC
 	ldh a, [hWhoseTurn]
 	and a
 	ld a, [wPlayerMonAccuracyMod]
@@ -6427,12 +6544,20 @@ LoadEnemyMonData:
 	ld a, [wEnemyMonSpecies2]
 	ld [wd11e], a
 	predef IndexToPokedex
+; avoid marking a pokemon as seen if it's not identified via the silph scope
+IF DEF(_BUGFIX)
+	call IsGhostBattle
+	jr z, .noMarkSeen
+ENDC
 	ld a, [wd11e]
 	dec a
 	ld c, a
 	ld b, FLAG_SET
 	ld hl, wPokedexSeen
 	predef FlagActionPredef ; mark this mon as seen in the pokedex
+IF DEF(_BUGFIX)
+.noMarkSeen
+ENDC
 	ld hl, wEnemyMonLevel
 	ld de, wEnemyMonUnmodifiedLevel
 	ld bc, 1 + NUM_STATS * 2
@@ -6759,6 +6884,25 @@ ApplyBadgeStatBoosts:
 	ld a, [wObtainedBadges]
 	ld b, a
 	ld hl, wBattleMonAttack
+; loop unrolled to fix badge boosts to match in game text
+; and the way it was fixed in FRLG
+IF DEF(_BUGFIX)
+	srl b
+	call c, .applyBoostToStat
+	ld hl, wBattleMonSpeed
+	srl b
+	srl b
+	call c, .applyBoostToStat
+	ld hl, wBattleMonDefense
+	srl b
+	srl b
+	call c, .applyBoostToStat
+	ld hl, wBattleMonSpecial
+	srl b
+	srl b 
+	call c, .applyBoostToStat
+	ret
+ELSE
 	ld c, $4
 ; the boost is applied for badges whose bit position is even
 ; the order of boosts matches the order they are laid out in RAM
@@ -6775,6 +6919,7 @@ ApplyBadgeStatBoosts:
 	dec c
 	jr nz, .loop
 	ret
+ENDC
 
 ; multiply stat at hl by 1.125
 ; cap stat at MAX_STAT_VALUE

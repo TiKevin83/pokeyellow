@@ -351,10 +351,12 @@ CooltrainerMAI:
 	jp AIUseXAttack
 
 CooltrainerFAI:
-	; The intended 25% chance to consider switching will not apply.
-	; Uncomment the line below to fix this.
 	cp 25 percent + 1
-	; ret nc
+; The intended 25% chance to consider switching will not apply.
+; Uncomment the line below to fix this.
+IF DEF(_BUGFIX)
+	ret nc
+ENDC
 	ld a, 10
 	call AICheckIfHPBelowFraction
 	jp c, AIUseHyperPotion
@@ -558,6 +560,12 @@ AIPrintItemUseAndUpdateHPBar:
 	xor a
 	ld [wHPBarType], a
 	predef UpdateHPBar2
+; fix to update enemy pokemon status HUD when healing items are used
+IF DEF(_BUGFIX)
+	push af
+	farcall DrawEnemyHUDAndHPBar
+	pop af
+ENDC
 	jp DecrementAICount
 
 AISwitchIfEnoughMons:
@@ -642,6 +650,12 @@ AICureStatus:
 	ld [wEnemyMonStatus], a ; clear status of active enemy
 	ld hl, wEnemyBattleStatus3
 	res 0, [hl]
+; fix to update enemy pokemon status HUD when healing items are used
+IF DEF(_BUGFIX)
+	push af
+	farcall DrawEnemyHUDAndHPBar
+	pop af
+ENDC
 	ret
 
 AIUseXAccuracy: ; unused

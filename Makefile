@@ -87,6 +87,10 @@ ifeq ($(DEBUG),1)
 RGBASMFLAGS += -E
 endif
 
+ifeq ($(BUGFIX),1)
+RGBASMFLAGS += -D _BUGFIX
+endif
+
 $(pokeyellow_debug_obj): RGBASMFLAGS += -D _DEBUG
 $(pokeyellow_vc_obj):    RGBASMFLAGS += -D _YELLOW_VC
 

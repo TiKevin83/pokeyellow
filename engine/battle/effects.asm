@@ -327,7 +327,10 @@ FreezeBurnParalyzeEffect:
 	ld hl, BurnedText
 	jp PrintText
 .freeze2
-; hyper beam bits aren't reseted for opponent's side
+; hyper beam bits aren't reset for the opponent's side
+IF DEF(_BUGFIX)
+	call ClearHyperBeam
+ENDC
 	ld a, 1 << FRZ
 	ld [wBattleMonStatus], a
 	ld a, SHAKE_SCREEN_ANIM
@@ -528,6 +531,14 @@ UpdateStatDone:
 	pop af
 	call nz, Bankswitch
 .applyBadgeBoostsAndStatusPenalties
+; Prevent reapplication of badge boosts
+IF DEF(_BUGFIX)
+	xor a
+	ld [wCalculateWhoseStats], a
+	ldh a, [hWhoseTurn]
+	and a
+	call z, CalculateModifiedStats
+ENDC
 	ldh a, [hWhoseTurn]
 	and a
 	call z, ApplyBadgeStatBoosts ; whenever the player uses a stat-up move, badge boosts get reapplied again to every stat,
@@ -720,6 +731,12 @@ UpdateLoweredStatDone:
 .ApplyBadgeBoostsAndStatusPenalties
 	ldh a, [hWhoseTurn]
 	and a
+; Prevent reapplication of badge boosts
+IF DEF(_BUGFIX)
+	call nz, CalculateModifiedStats
+	ldh a, [hWhoseTurn]
+	and a
+ENDC
 	call nz, ApplyBadgeStatBoosts ; whenever the player uses a stat-down move, badge boosts get reapplied again to every stat,
 	                              ; even to those not affected by the stat-up move (will be boosted further)
 	ld hl, MonsStatsFellText
