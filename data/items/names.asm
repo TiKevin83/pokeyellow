@@ -1,12 +1,12 @@
 ItemNames::
-	list_start ItemNames
+	list_start ITEM_NAME_LENGTH - 1
 	li "MASTER BALL"
 	li "ULTRA BALL"
 	li "GREAT BALL"
 	li "POKé BALL"
 	li "TOWN MAP"
 	li "BICYCLE"
-	li "?????"
+	li "?????" ; SURFBOARD
 	li "SAFARI BALL"
 	li "POKéDEX"
 	li "MOON STONE"
@@ -43,13 +43,13 @@ ItemNames::
 	li "DOME FOSSIL"
 	li "HELIX FOSSIL"
 	li "SECRET KEY"
-	li "?????"
+	li "?????" ; ITEM_2C
 	li "BIKE VOUCHER"
 	li "X ACCURACY"
 	li "LEAF STONE"
 	li "CARD KEY"
 	li "NUGGET"
-	li "PP UP"
+	li "PP UP" ; ITEM_32
 	li "POKé DOLL"
 	li "FULL HEAL"
 	li "REVIVE"

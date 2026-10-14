@@ -2,7 +2,7 @@ PrepareOAMData::
 ; Determine OAM data for currently visible
 ; sprites and write it to wShadowOAM.
 ; Yellow code has been changed to use registers more efficiently
-; as well as tweaking the code to show gbc palettes
+; as well as tweaking the code to show cgb palettes
 
 	ld a, [wUpdateSpritesEnabled]
 	dec a
@@ -30,7 +30,7 @@ PrepareOAMData::
 	inc e
 	inc e
 	ld a, [de] ; [x#SPRITESTATEDATA1_IMAGEINDEX]
-	ld [wd5cd], a
+	ld [wSavedSpriteImageIndex], a
 	cp $ff ; off-screen (don't draw)
 	jr nz, .visible
 
@@ -79,7 +79,7 @@ PrepareOAMData::
 	jr nc, .asm_4a41
 .hidden
 	call Func_4a7b
-	ld [wd5cd], a
+	ld [wSavedSpriteImageIndex], a
 	ldh a, [hOAMBufferOffset]
 
 	ld e, a
@@ -101,7 +101,7 @@ PrepareOAMData::
 	ld [de], a
 	inc hl
 	inc e
-	ld a, [wd5cd]
+	ld a, [wSavedSpriteImageIndex]
 	add [hl]
 	cp $80
 	jr c, .asm_4a1c
@@ -113,13 +113,13 @@ PrepareOAMData::
 	inc hl
 	inc e
 	ld a, [hl]
-	bit 1, a ; is the tile allowed to set the sprite priority bit?
+	bit BIT_SPRITE_UNDER_GRASS, a
 	jr z, .skipPriority
 	ldh a, [hSpritePriority]
 	or [hl]
 .skipPriority
 	and $f0
-	bit OAM_OBP_NUM, a
+	bit B_OAM_PAL1, a
 	jr z, .spriteusesOBP0
 	or OAM_HIGH_PALS
 .spriteusesOBP0
@@ -139,14 +139,14 @@ PrepareOAMData::
 
 	; Clear unused OAM.
 .asm_4a41
-	ld a, [wd736]
-	bit 6, a ; jumping down ledge or fishing animation?
-	ld c, $a0
+	ld a, [wMovementFlags]
+	bit BIT_LEDGE_OR_FISHING, a
+	ld c, LOW(wShadowOAMEnd)
 	jr z, .clear
 
 ; Don't clear the last 4 entries because they are used for the shadow in the
 ; jumping down ledge animation and the rod in the fishing animation.
-	ld c, $90
+	ld c, LOW(wShadowOAMSprite36)
 
 .clear
 	ldh a, [hOAMBufferOffset]
@@ -188,7 +188,7 @@ GetSpriteScreenXY:
 
 Func_4a7b:
 	push bc
-	ld a, [wd5cd]            ; temp copy of [x#SPRITESTATEDATA1_IMAGEINDEX]
+	ld a, [wSavedSpriteImageIndex]
 	swap a                   ; high nybble determines sprite used (0 is always player sprite, next are some npcs)
 	and $f
 

@@ -37,25 +37,16 @@ DEF SLOTS_SOMEONESKEYS EQU $ff
 	const TRADE_FOR_RICKY
 DEF NUM_NPC_TRADES EQU const_value
 
+; TradeMons table width
+DEF TRADE_DATA_SIZE EQU 3 + NAME_LENGTH
+
 ; in game trade dialog sets
 ; InGameTradeTextPointers indexes (see engine/events/in_game_trades.asm)
 	const_def
 	const TRADE_DIALOGSET_CASUAL
 	const TRADE_DIALOGSET_EVOLUTION
 	const TRADE_DIALOGSET_HAPPY
-
-; badges
-; wObtainedBadges and wBeatGymFlags bits
-	const_def
-	const BIT_BOULDERBADGE ; 0
-	const BIT_CASCADEBADGE ; 1
-	const BIT_THUNDERBADGE ; 2
-	const BIT_RAINBOWBADGE ; 3
-	const BIT_SOULBADGE    ; 4
-	const BIT_MARSHBADGE   ; 5
-	const BIT_VOLCANOBADGE ; 6
-	const BIT_EARTHBADGE   ; 7
-DEF NUM_BADGES EQU const_value
+DEF NUM_TRADE_DIALOGSETS EQU const_value
 
 ; OaksAideScript results
 DEF OAKS_AIDE_BAG_FULL        EQU $00

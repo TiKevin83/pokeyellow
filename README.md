@@ -1,4 +1,4 @@
-# Pokémon Yellow [![Build Status][ci-badge]][ci]
+# Pokémon Yellow Fort Knox Edition [![Build Status][ci-badge]][ci]
 
 This is a disassembly of Pokémon Yellow.
 
@@ -10,37 +10,34 @@ It builds the following ROMs:
 
 To set up the repository, see [**INSTALL.md**](INSTALL.md).
 
+## Fort Knox Edition
+
+This version includes the ability to optionally compile with a set of bugfix patches I'm calling Fort Knox Edition:
+
+`make BUGFIX=1`
+
+Use `make BUGFIX=0` (or plain `make`) for the original behavior. Switching
+`BUGFIX` automatically rebuilds the objects, so no clean is needed. This also
+applies to the debug and Virtual Console targets.
+
+The latest memory bounds, arithmetic, and saved-state fixes are documented in
+[Bugfix hardening](docs/bugfix-hardening.md), including emulator regression tests.
+
+Many of these patches are sourced from the research done on [pokered](https://github.com/pret/pokered/wiki/%5BARCHIVED%5D-Bugs-and-Glitches) which is now defunct and archived. Some patches were also written specifically for this project (badge boosts, fast options) and some were collaborations with other Pokemon Speedrun community members including CasualPokePlayer and luckytyphlosion (statistically validated PRNG).
 
 ## See also
 
 - [**Wiki**][wiki] (includes [tutorials][tutorials])
 - [**Symbols**][symbols]
-- **Discord:** [pret][discord]
-- **IRC:** [libera#pret][irc]
+- [**Tools**][tools]
 
-Other disassembly projects:
+You can find us on [Discord (pret, #pokered)](https://discord.gg/d5dubZ3).
 
-- [**Pokémon Red/Blue**][pokered]
-- [**Pokémon Gold/Silver**][pokegold]
-- [**Pokémon Crystal**][pokecrystal]
-- [**Pokémon Pinball**][pokepinball]
-- [**Pokémon TCG**][poketcg]
-- [**Pokémon Ruby**][pokeruby]
-- [**Pokémon FireRed**][pokefirered]
-- [**Pokémon Emerald**][pokeemerald]
+For other pret projects, see [pret.github.io](https://pret.github.io/).
 
-[pokered]: https://github.com/pret/pokered
-[pokegold]: https://github.com/pret/pokegold
-[pokecrystal]: https://github.com/pret/pokecrystal
-[pokepinball]: https://github.com/pret/pokepinball
-[poketcg]: https://github.com/pret/poketcg
-[pokeruby]: https://github.com/pret/pokeruby
-[pokefirered]: https://github.com/pret/pokefirered
-[pokeemerald]: https://github.com/pret/pokeemerald
 [wiki]: https://github.com/pret/pokeyellow/wiki
 [tutorials]: https://github.com/pret/pokeyellow/wiki/Tutorials
 [symbols]: https://github.com/pret/pokeyellow/tree/symbols
-[discord]: https://discord.gg/d5dubZ3
-[irc]: https://web.libera.chat/?#pret
+[tools]: https://github.com/pret/gb-asm-tools
 [ci]: https://github.com/pret/pokeyellow/actions
 [ci-badge]: https://github.com/pret/pokeyellow/actions/workflows/main.yml/badge.svg

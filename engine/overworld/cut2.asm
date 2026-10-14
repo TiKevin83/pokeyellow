@@ -18,7 +18,7 @@ AnimCut:
 	ldh a, [rOBP1]
 	xor $64
 	ldh [rOBP1], a
-	call UpdateGBCPal_OBP1
+	call UpdateCGBPal_OBP1
 	call DelayFrame
 	pop bc
 	dec c
@@ -69,7 +69,7 @@ AnimCutGrass_UpdateOAMEntries:
 	ldh a, [rOBP1]
 	xor $64
 	ldh [rOBP1], a
-	call UpdateGBCPal_OBP1
+	call UpdateCGBPal_OBP1
 	call DelayFrame
 	pop bc
 	dec c
@@ -79,13 +79,13 @@ AnimCutGrass_UpdateOAMEntries:
 AnimCutGrass_SwapOAMEntries:
 	ld hl, wShadowOAMSprite36
 	ld de, wBuffer
-	ld bc, $8
+	ld bc, 2 * OBJ_SIZE
 	call CopyData
 	ld hl, wShadowOAMSprite38
 	ld de, wShadowOAMSprite36
-	ld bc, $8
+	ld bc, 2 * OBJ_SIZE
 	call CopyData
 	ld hl, wBuffer
 	ld de, wShadowOAMSprite38
-	ld bc, $8
+	ld bc, 2 * OBJ_SIZE
 	jp CopyData

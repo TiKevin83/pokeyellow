@@ -1,5 +1,3 @@
-DEF MAP_TILESET_SIZE EQU $60
-
 UpdatePlayerSprite:
 	ld a, [wSpritePlayerStateData2WalkAnimationCounter]
 	and a
@@ -37,7 +35,7 @@ UpdatePlayerSprite:
 ; check if down
 	bit PLAYER_DIR_BIT_DOWN, a
 	jr z, .checkIfUp
-	xor a ; ld a, SPRITE_FACING_DOWN
+	xor a ; SPRITE_FACING_DOWN
 	jr .next
 .checkIfUp
 	bit PLAYER_DIR_BIT_UP, a
@@ -57,7 +55,7 @@ UpdatePlayerSprite:
 .next
 	ld [wSpritePlayerStateData1FacingDirection], a ; facing direction
 	ld a, [wFontLoaded]
-	bit 0, a
+	bit BIT_FONT_LOADED, a
 	jr z, .moving
 .notMoving
 ; zero the animation counters
@@ -67,8 +65,8 @@ UpdatePlayerSprite:
 	call Func_4e32
 	jr .skipSpriteAnim
 .moving
-	ld a, [wd736]
-	bit 7, a ; is the player sprite spinning due to a spin tile?
+	ld a, [wMovementFlags]
+	bit BIT_SPINNING, a
 	jr nz, .skipSpriteAnim
 	call Func_5274
 	call Func_4e32
@@ -83,7 +81,7 @@ UpdatePlayerSprite:
 	cp c
 	ld a, 0
 	jr nz, .next2
-	ld a, OAM_BEHIND_BG
+	ld a, OAM_PRIO
 .next2
 	ld [wSpritePlayerStateData2GrassPriority], a
 	ret
@@ -114,18 +112,18 @@ UpdateNPCSprite:
 	and a
 	jp z, InitializeSpriteStatus
 	call CheckSpriteAvailability
-	ret c             ; if sprite is invisible, on tile >=MAP_TILESET_SIZE, in grass or player is currently walking
+	ret c             ; don't do anything if sprite is invisible
 	ld h, HIGH(wSpriteStateData1)
 	ldh a, [hCurrentSpriteOffset]
 	ld l, a
 	inc l
 	ld a, [hl]        ; x#SPRITESTATEDATA1_MOVEMENTSTATUS
-	bit 7, a ; is the face player flag set?
+	bit BIT_FACE_PLAYER, a
 	jp nz, MakeNPCFacePlayer
 	ld b, a
 	ld a, [wFontLoaded]
-	bit 0, a
-	jp nz, notYetMoving
+	bit BIT_FONT_LOADED, a
+	jp nz, NotYetMoving
 	ld a, b
 	cp $2
 	jp z, UpdateSpriteMovementDelay  ; [x#SPRITESTATEDATA1_MOVEMENTSTATUS] == 2
@@ -135,7 +133,7 @@ UpdateNPCSprite:
 	jp z, Func_5357
 	ld a, [wWalkCounter]
 	and a
-	ret nz           ; don't do anything yet if player is currently moving (redundant, already tested in CheckSpriteAvailability)
+	ret nz           ; don't do anything yet if player is currently moving
 	call InitializeSpriteScreenPosition
 	ld h, HIGH(wSpriteStateData2)
 	ldh a, [hCurrentSpriteOffset]
@@ -162,11 +160,11 @@ UpdateNPCSprite:
 	jr nz, .next
 ; reached end of wNPCMovementDirections list
 	ld [hl], a ; store $ff in movement byte 1, disabling scripted movement
-	ld hl, wd730
-	res 0, [hl]
+	ld hl, wStatusFlags5
+	res BIT_SCRIPTED_NPC_MOVEMENT, [hl]
 	xor a
 	ld [wSimulatedJoypadStatesIndex], a
-	ld [wWastedByteCD3A], a
+	ld [wUnusedOverrideSimulatedJoypadStatesIndex], a
 	ret
 .next
 	cp WALK
@@ -347,14 +345,15 @@ UpdateSpriteMovementDelay:
 	jr .moving
 .tickMoveCounter
 	dec [hl]                ; x#SPRITESTATEDATA2_MOVEMENTDELAY
-	jr nz, notYetMoving
+	jr nz, NotYetMoving
 .moving
 	dec h
 	ldh a, [hCurrentSpriteOffset]
 	inc a
 	ld l, a
 	ld [hl], $1             ; [x#SPRITESTATEDATA1_MOVEMENTSTATUS] = 1 (mark as ready to move)
-notYetMoving:
+	; fallthrough
+NotYetMoving:
 	ld h, HIGH(wSpriteStateData1)
 	ldh a, [hCurrentSpriteOffset]
 	add SPRITESTATEDATA1_ANIMFRAMECOUNTER
@@ -367,10 +366,10 @@ MakeNPCFacePlayer:
 
 ; Check if the behaviour of the NPC facing the player when spoken to is
 ; disabled. This is only done when rubbing the S.S. Anne captain's back.
-	ld a, [wd72d]
-	bit 5, a
-	jr nz, notYetMoving
-	res 7, [hl]
+	ld a, [wStatusFlags3]
+	bit BIT_NO_NPC_FACE_PLAYER, a
+	jr nz, NotYetMoving
+	res BIT_FACE_PLAYER, [hl]
 	ld a, [wPlayerDirection]
 	bit PLAYER_DIR_BIT_UP, a
 	jr z, .notFacingDown
@@ -393,7 +392,7 @@ MakeNPCFacePlayer:
 	add $9
 	ld l, a
 	ld [hl], c              ; [x#SPRITESTATEDATA1_FACINGDIRECTION]: set facing direction
-	jr notYetMoving
+	jr NotYetMoving
 
 InitializeSpriteStatus:
 	ld [hl], $1   ; [x#SPRITESTATEDATA1_MOVEMENTSTATUS] = ready
@@ -448,7 +447,7 @@ Func_5033:
 ; tests if sprite is off screen or otherwise unable to do anything
 CheckSpriteAvailability:
 	predef IsObjectHidden
-	ldh a, [hIsHiddenMissableObject]
+	ldh a, [hIsToggleableObjectOff]
 	and a
 	jp nz, .spriteInvisible
 	ld h, HIGH(wSpriteStateData2)
@@ -520,7 +519,7 @@ CheckSpriteAvailability:
 	cp c
 	ld a, 0
 	jr nz, .notInGrass
-	ld a, OAM_BEHIND_BG
+	ld a, OAM_PRIO
 .notInGrass
 	ld [hl], a       ; x#SPRITESTATEDATA2_GRASSPRIORITY
 	and a
@@ -580,12 +579,22 @@ CanWalkOntoTile:
 	ld a, [hli]        ; x#SPRITESTATEDATA1_YPIXELS
 	add $4             ; align to blocks (Y pos is always 4 pixels off)
 	add d              ; add Y delta
+; fix the bottom row of the screen being treated as offscreen
+IF DEF(_BUGFIX)
+	cp $81
+ELSE
 	cp $80             ; if value is >$80, the destination is off screen (either $81 or $FF underflow)
+ENDC
 	jr nc, .impassable ; don't walk off screen
 	inc l
 	ld a, [hl]         ; x#SPRITESTATEDATA1_XPIXELS
 	add e              ; add X delta
+; fix the rightmost column of the screen being treated as offscreen
+IF DEF(_BUGFIX)
+	cp $91
+ELSE
 	cp $90             ; if value is >$90, the destination is off screen (either $91 or $FF underflow)
+ENDC
 	jr nc, .impassable ; don't walk off screen
 	push de
 	push bc
@@ -610,7 +619,7 @@ CanWalkOntoTile:
 	add SPRITESTATEDATA2_YDISPLACEMENT
 	ld l, a
 	ld a, [hli]        ; x#SPRITESTATEDATA2_YDISPLACEMENT (initialized at $8, keep track of where a sprite did go)
-	bit 7, d           ; check if going upwards (d=$ff)
+	bit 7, d           ; check if going upwards (d == -1)
 	jr nz, .upwards
 	add d
 	; bug: these tests against $5 probably were supposed to prevent
@@ -628,7 +637,7 @@ CanWalkOntoTile:
 .checkHorizontal
 	ld d, a
 	ld a, [hl]         ; x#SPRITESTATEDATA2_XDISPLACEMENT (initialized at $8, keep track of where a sprite did go)
-	bit 7, e           ; check if going left (e=$ff)
+	bit 7, e           ; check if going left (e == -1)
 	jr nz, .left
 	add e
 	cp $5              ; compare, but no conditional jump like in the vertical check above (bug?)
@@ -710,12 +719,12 @@ DoScriptedNPCMovement:
 ; a few times in the game. It is used when the NPC and player must walk together
 ; in sync, such as when the player is following the NPC somewhere. An NPC can't
 ; be moved in sync with the player using the other method.
-	ld a, [wd730]
-	bit 7, a
+	ld a, [wStatusFlags5]
+	bit BIT_SCRIPTED_MOVEMENT_STATE, a
 	ret z
-	ld hl, wd72e
-	bit 7, [hl]
-	set 7, [hl]
+	ld hl, wStatusFlags4
+	bit BIT_INIT_SCRIPTED_MOVEMENT, [hl]
+	set BIT_INIT_SCRIPTED_MOVEMENT, [hl]
 	jp z, InitScriptedNPCMovement
 	ld hl, wNPCMovementDirections2
 	ld a, [wNPCMovementDirections2Index]

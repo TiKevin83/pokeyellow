@@ -11,10 +11,10 @@ DisplayPokemonCenterDialogue_::
 	call SaveScreenTilesToBuffer1 ; save screen
 	ld hl, PokemonCenterWelcomeText
 	call PrintText
-	ld hl, wd72e
-	bit 2, [hl]
-	set 1, [hl]
-	set 2, [hl]
+	ld hl, wStatusFlags4
+	bit BIT_USED_POKECENTER, [hl]
+	set BIT_UNKNOWN_4_1, [hl]
+	set BIT_USED_POKECENTER, [hl]
 	jr nz, .skipShallWeHealYourPokemon
 	ld hl, ShallWeHealYourPokemonText
 	call PrintText
@@ -25,14 +25,14 @@ DisplayPokemonCenterDialogue_::
 	and a
 	jp nz, .declinedHealing ; if the player chose No
 	call SetLastBlackoutMap
-	callfar IsStarterPikachuInOurParty
+	callfar IsStarterPikachuAliveInOurParty
 	jr nc, .notHealingPlayerPikachu
 	call CheckPikachuFollowingPlayer
 	jr nz, .notHealingPlayerPikachu
 	call LoadCurrentMapView
 	call Delay3
 	call UpdateSprites
-	callfar PikachuWalksToNurseJoy ; todo
+	callfar PikachuWalksToNurseJoy
 .notHealingPlayerPikachu
 	ld hl, NeedYourPokemonText
 	call PrintText
@@ -41,7 +41,7 @@ DisplayPokemonCenterDialogue_::
 	call CheckPikachuFollowingPlayer
 	jr nz, .playerPikachuNotOnScreen
 	call DisablePikachuOverworldSpriteDrawing
-	callfar IsStarterPikachuInOurParty
+	callfar IsStarterPikachuAliveInOurParty
 	call c, Func_6eaa
 .playerPikachuNotOnScreen
 	lb bc, 1, 8
@@ -60,7 +60,7 @@ DisplayPokemonCenterDialogue_::
 	call PlaySound
 	call CheckPikachuFollowingPlayer
 	jr nz, .doNotReturnPikachu
-	callfar IsStarterPikachuInOurParty
+	callfar IsStarterPikachuAliveInOurParty
 	call c, Func_6eaa
 	ld a, $5
 	ld [wPikachuSpawnState], a
@@ -70,7 +70,7 @@ DisplayPokemonCenterDialogue_::
 	call Func_6ebb
 	ld hl, PokemonFightingFitText
 	call PrintText
-	callfar IsStarterPikachuInOurParty
+	callfar IsStarterPikachuAliveInOurParty
 	jr nc, .notInParty
 	lb bc, 15, 0
 	call Func_6ebb

@@ -3,8 +3,8 @@ LoadShootingStarGraphics:
 	ldh [rOBP0], a
 	ld a, $a4
 	ldh [rOBP1], a
-	call UpdateGBCPal_OBP0
-	call UpdateGBCPal_OBP1
+	call UpdateCGBPal_OBP0
+	call UpdateCGBPal_OBP1
 	ld de, MoveAnimationTiles1 tile 3 ; star tile (top left quadrant)
 	ld hl, vChars1 tile $20
 	lb bc, BANK(MoveAnimationTiles1), 1
@@ -15,7 +15,7 @@ LoadShootingStarGraphics:
 	call CopyVideoData
 	ld de, FallingStar
 	ld hl, vChars1 tile $22
-	lb bc, BANK(FallingStar), (FallingStarEnd - FallingStar) / $10
+	lb bc, BANK(FallingStar), (FallingStarEnd - FallingStar) / TILE_SIZE
 	call CopyVideoData
 	ld hl, GameFreakLogoOAMData
 	ld de, wShadowOAMSprite24
@@ -62,11 +62,11 @@ AnimateShootingStar:
 	jr nz, .bigStarLoop
 
 ; Clear big star OAM.
-	ld hl, wShadowOAM
+	ld hl, wShadowOAMSprite00YCoord
 	ld c, 4
-	ld de, 4
+	ld de, OBJ_SIZE
 .clearOAMLoop
-	ld [hl], 160
+	ld [hl], SCREEN_HEIGHT_PX + OAM_Y_OFS
 	add hl, de
 	dec c
 	jr nz, .clearOAMLoop
@@ -77,7 +77,7 @@ AnimateShootingStar:
 	ld hl, rOBP0
 	rrc [hl]
 	rrc [hl]
-	call UpdateGBCPal_OBP0
+	call UpdateCGBPal_OBP0
 	ld c, 10
 	call CheckForUserInterruption
 	ret c
@@ -136,7 +136,12 @@ AnimateShootingStar:
 	ld a, [wMoveDownSmallStarsOAMCount]
 	cp 24
 	jr z, .next2
-	add 6 ; should be 4, but the extra 2 aren't visible on screen
+; originally 2 extra stars are set up but only offscreen
+IF DEF(_BUGFIX)
+	add 4
+ELSE
+	add 6
+ENDC
 	ld [wMoveDownSmallStarsOAMCount], a
 .next2
 	call MoveDownSmallStars
@@ -145,7 +150,7 @@ AnimateShootingStar:
 ; shift the existing OAM entries down to make room for the next wave
 	ld hl, wShadowOAMSprite04
 	ld de, wShadowOAM
-	ld bc, $50
+	ld bc, OBJ_SIZE * 20
 	call CopyData
 
 	pop af
@@ -158,7 +163,7 @@ AnimateShootingStar:
 	ret
 
 SmallStarsOAM:
-	dbsprite  0,  0,  0,  0, $A2, OAM_BEHIND_BG | OAM_OBP1
+	dbsprite  0,  0,  0,  0, $A2, OAM_PRIO | OAM_PAL1
 SmallStarsOAMEnd:
 
 SmallStarsWaveCoordsPointerTable:
@@ -220,7 +225,7 @@ MoveDownSmallStars:
 	ldh a, [rOBP1]
 	xor %10100000
 	ldh [rOBP1], a
-	call UpdateGBCPal_OBP1
+	call UpdateCGBPal_OBP1
 	ld c, 3
 	call CheckForUserInterruption
 	ret c
@@ -248,10 +253,10 @@ GameFreakLogoOAMData:
 GameFreakLogoOAMDataEnd:
 
 GameFreakShootingStarOAMData:
-	dbsprite 20,  0,  0,  0, $a0, OAM_OBP1 | OAM_HIGH_PALS
-	dbsprite 21,  0,  0,  0, $a0, OAM_OBP1 | OAM_HIGH_PALS | OAM_HFLIP
-	dbsprite 20,  1,  0,  0, $a1, OAM_OBP1 | OAM_HIGH_PALS
-	dbsprite 21,  1,  0,  0, $a1, OAM_OBP1 | OAM_HIGH_PALS | OAM_HFLIP
+	dbsprite 20,  0,  0,  0, $a0, OAM_PAL1 | OAM_HIGH_PALS
+	dbsprite 21,  0,  0,  0, $a0, OAM_PAL1 | OAM_HIGH_PALS | OAM_XFLIP
+	dbsprite 20,  1,  0,  0, $a1, OAM_PAL1 | OAM_HIGH_PALS
+	dbsprite 21,  1,  0,  0, $a1, OAM_PAL1 | OAM_HIGH_PALS | OAM_XFLIP
 GameFreakShootingStarOAMDataEnd:
 
 FallingStar:

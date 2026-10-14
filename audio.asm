@@ -148,7 +148,7 @@ INCLUDE "audio/sfx/start_menu_2.asm"
 INCLUDE "audio/sfx/tink_2.asm"
 INCLUDE "audio/sfx/heal_hp_2.asm"
 INCLUDE "audio/sfx/heal_ailment_2.asm"
-INCLUDE "audio/sfx/silph_scope.asm"
+INCLUDE "audio/sfx/trainer_appeared.asm"
 INCLUDE "audio/sfx/ball_toss.asm"
 INCLUDE "audio/sfx/ball_poof.asm"
 INCLUDE "audio/sfx/faint_thud.asm"
@@ -453,7 +453,6 @@ INCLUDE "audio/engine_3.asm"
 
 SECTION "Audio Engine 4", ROMX
 
-INCLUDE "gfx/surfing_pikachu.asm"
 INCLUDE "audio/engine_4.asm"
 
 
@@ -538,8 +537,14 @@ INCLUDE "audio/music/yellowunusedsong.asm"
 INCLUDE "audio/music/meetjessiejames.asm"
 
 IF !DEF(_DEBUG)
-	INCBIN "garbage/bank20.bin"
+	INCBIN "garbage/bank20.2bpp", 185
 ENDC
+
+
+SECTION "Pikachu PCM", ROMX
+
+INCLUDE "audio/pikachu_pcm.asm"
+INCLUDE "audio/pikachu_cries_pointers.asm"
 
 
 ; Pikachu cries are in different banks

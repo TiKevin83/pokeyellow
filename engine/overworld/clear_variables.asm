@@ -10,11 +10,18 @@ ClearVariablesOnEnterMap::
 	ldh [hJoyReleased], a
 	ldh [hJoyHeld], a
 	ld [wActionResultOrTookBattleTurn], a
-	ld [wUnusedD5A3], a
+	ld [wUnusedMapVariable], a
 	ld hl, wCardKeyDoorY
 	ld [hli], a
 	ld [hl], a
 	ld hl, wWhichTrade
 	ld bc, wStandingOnWarpPadOrHole - wWhichTrade
 	call FillMemory
+; Clear a possible bad game state after Trainer Fly
+IF DEF(_BUGFIX)
+	ld hl, wStatusFlags5
+	set 3, [hl] ; Tells the trainer encounter script to cancel any pending encounters
+	ld hl, wMiscFlags
+	res 0, [hl] ; Clear encountered trainer flag (avoid blocked buttons after a Trainer Fly)
+ENDC
 	ret

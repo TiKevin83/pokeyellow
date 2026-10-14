@@ -1,3 +1,8 @@
+; wSpriteLoadFlags bits, streamed from compressed sprite data
+	const_def
+	const BIT_USE_SPRITE_BUFFER_2 ; 0
+	const BIT_LAST_SPRITE_CHUNK   ; 1
+
 ; bankswitches and runs _UncompressSpriteData
 ; bank is given in a, sprite input stream is pointed to in wSpriteInputPtr
 UncompressSpriteData::
@@ -6,10 +11,10 @@ UncompressSpriteData::
 	push af
 	ld a, b
 	call BankswitchCommon
-	ld a, $0
-	call SwitchSRAMBankAndLatchClockData
+	ld a, BANK("Sprite Buffers")
+	call OpenSRAM
 	call _UncompressSpriteData
-	call PrepareRTCDataAndDisableSRAM
+	call CloseSRAM
 	pop af
 	call BankswitchCommon
 	ret
@@ -31,37 +36,53 @@ _UncompressSpriteData::
 	ld [wSpriteLoadFlags], a
 	call ReadNextInputByte    ; first byte of input determines sprite width (high nybble) and height (low nybble) in tiles (8x8 pixels)
 	ld b, a
+; fix glitch sprites corrupting SRAM
+IF DEF(_BUGFIX)
+	and $7
+	jr nz, .skip1
+	inc a
+.skip1
+ELSE
 	and $f
+ENDC
 	add a
 	add a
 	add a
 	ld [wSpriteHeight], a
 	ld a, b
 	swap a
+; fix glitch sprites corrupting SRAM
+IF DEF(_BUGFIX)
+	and $7
+	jr nz, .skip2
+	inc a
+.skip2
+ELSE
 	and $f
+ENDC
 	add a
 	add a
 	add a
 	ld [wSpriteWidth], a
 	call ReadNextInputBit
-	ld [wSpriteLoadFlags], a ; initialite bit1 to 0 and bit0 to the first input bit
+	ld [wSpriteLoadFlags], a ; initialize bit1 to 0 and bit0 to the first input bit
                              ; this will load two chunks of data to sSpriteBuffer1 and sSpriteBuffer2
                              ; bit 0 decides in which one the first chunk is placed
 	; fall through
 
-; uncompresses a chunk from the sprite input data stream (pointed to at wd0da) into sSpriteBuffer1 or sSpriteBuffer2
+; uncompresses a chunk from the sprite input data stream (pointed to by wSpriteInputPtr) into sSpriteBuffer1 or sSpriteBuffer2
 ; each chunk is a 1bpp sprite. A 2bpp sprite consist of two chunks which are merged afterwards
 ; note that this is an endless loop which is terminated during a call to MoveToNextBufferPosition by manipulating the stack
 UncompressSpriteDataLoop::
 	ld hl, sSpriteBuffer1
 	ld a, [wSpriteLoadFlags]
-	bit 0, a
+	bit BIT_USE_SPRITE_BUFFER_2, a
 	jr z, .useSpriteBuffer1    ; check which buffer to use
 	ld hl, sSpriteBuffer2
 .useSpriteBuffer1
 	call StoreSpriteOutputPointer
 	ld a, [wSpriteLoadFlags]
-	bit 1, a
+	bit BIT_LAST_SPRITE_CHUNK, a
 	jr z, .startDecompression  ; check if last iteration
 	call ReadNextInputBit      ; if last chunk, read 1-2 bit unpacking mode
 	and a
@@ -193,10 +214,10 @@ MoveToNextBufferPosition::
 	xor a
 	ld [wSpriteCurPosX], a
 	ld a, [wSpriteLoadFlags]
-	bit 1, a
+	bit BIT_LAST_SPRITE_CHUNK, a
 	jr nz, .done            ; test if there is one more sprite to go
-	xor $1
-	set 1, a
+	xor 1 << BIT_USE_SPRITE_BUFFER_2
+	set BIT_LAST_SPRITE_CHUNK, a
 	ld [wSpriteLoadFlags], a
 	jp UncompressSpriteDataLoop
 .done
@@ -458,7 +479,7 @@ DecodeNybble1TableFlipped::
 	dn $e, $6
 	dn $2, $a
 
-; combines the two loaded chunks with xor (the chunk loaded second is the destination). The source chunk is differeintial decoded beforehand.
+; combines the two loaded chunks with xor (the chunk loaded second is the destination). The source chunk is differential decoded beforehand.
 XorSpriteChunks::
 	xor a
 	ld [wSpriteCurPosX], a
@@ -537,7 +558,7 @@ ReverseNybble::
 ; resets sprite buffer pointers to buffer 1 and 2, depending on wSpriteLoadFlags
 ResetSpriteBufferPointers::
 	ld a, [wSpriteLoadFlags]
-	bit 0, a
+	bit BIT_USE_SPRITE_BUFFER_2, a
 	jr nz, .buffer2Selected
 	ld de, sSpriteBuffer1
 	ld hl, sSpriteBuffer2
@@ -560,7 +581,7 @@ ResetSpriteBufferPointers::
 NybbleReverseTable::
 	db $0, $8, $4, $c, $2, $a, $6, $e, $1, $9, $5, $d, $3, $b, $7, $f
 
-; combines the two loaded chunks with xor (the chunk loaded second is the destination). Both chunks are differeintial decoded beforehand.
+; combines the two loaded chunks with xor (the chunk loaded second is the destination). Both chunks are differential decoded beforehand.
 UnpackSpriteMode2::
 	call ResetSpriteBufferPointers
 	ld a, [wSpriteFlipped]

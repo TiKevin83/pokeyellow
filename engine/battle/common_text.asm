@@ -12,9 +12,9 @@ PrintBeginningBattleText:
 	cp BATTLE_TYPE_PIKACHU
 	jr nz, .notPikachuBattle
 	callfar IsPlayerPikachuAsleepInParty
-	ld e, $24
+	ldpikacry e, PikachuCry37
 	jr c, .asm_f4026
-	ld e, $a
+	ldpikacry e, PikachuCry11
 .asm_f4026
 	callfar PlayPikachuSoundClip
 	jr .continue
@@ -48,7 +48,7 @@ PrintBeginningBattleText:
 	ld b, SILPH_SCOPE
 	call IsItemInBag
 	ld a, [wEnemyMonSpecies2]
-	ld [wcf91], a
+	ld [wCurPartySpecies], a
 	cp RESTLESS_SOUL
 	jr z, .isMarowak
 	ld a, b
@@ -80,7 +80,7 @@ PrintBeginningBattleText:
 	ld [wFrequencyModifier], a
 	ld a, $80
 	ld [wTempoModifier], a
-	ld a, SFX_SILPH_SCOPE
+	ld a, SFX_TRAINER_APPEARED
 	call PlaySound
 	jp WaitForSoundToFinish
 .done
@@ -200,6 +200,10 @@ PlayerMon2Text:
 	ld b, [hl]
 	ld a, [de]
 	sbc b
+; original code ignores underflow, if we underflow, print default text
+IF DEF(_BUGFIX)
+	jr c, .gainedHP
+ENDC
 	ldh [hMultiplicand + 1], a
 	ld a, 25
 	ldh [hMultiplier], a
@@ -234,6 +238,14 @@ PlayerMon2Text:
 	ret c
 	ld hl, GoodText ; HP went down 70% or more
 	ret
+; fallback to default text for underflow
+IF DEF(_BUGFIX)
+.gainedHP
+	pop bc
+	pop de
+	ld hl, EnoughText 
+	ret
+ENDC
 
 EnoughText:
 	text_far _EnoughText

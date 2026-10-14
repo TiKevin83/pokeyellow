@@ -1,5 +1,7 @@
 # compiled objects
 *.o
+.build-config
+.build-config.tmp
 
 # compiled graphics
 *.1bpp
