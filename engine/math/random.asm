@@ -25,36 +25,33 @@ IF DEF(_BUGFIX)
 ; luckytyphlosion implementation of xorshift prng
 ; ported from https://github.com/edrosten/8bit_rng
 XorshiftRandom:
-    push bc
-    ld hl, wRandomSeed
-    ld a, [hl] ; read in x
-    ; x << 4
-    add a
-    add a
-    add a
-    add a
-    xor [hl]
-    ld b, a ; t = x ^ (x << 4)
-    ld hl, wRandomSeed + 3
-    ld a, [hld] ; read in a ; hl = +2
-    ld c, [hl] ; read in z ; hl = +2
-    ld [hld], a ; z = a ; hl = +1
-    ld a, c ; move z to a
-    ld c, [hl] ; read in y
-    ld [hld], a ; y = old z
-    ld [hl], c ; x = y
-    ld a, [wRandomSeed+2]
-    ld c, a
-    ; hl = y
-    ; vars
-    ; b contains t
-    ; a/c contains z
-    xor b ; z ^ t
-    srl c ; (z >> 1)
-    xor c ; z ^ t ^ (z >> 1)
-    sla b ; (t << 1)
-    xor b ; z ^ t ^ (z >> 1) ^ (t << 1)
-    ld [wRandomSeed + 3], a
-    pop bc
-    ret
+; State is (x, y, z, w). Return the next byte in a; clobber bc and hl.
+; Random preserves the caller's registers, so no nested save is needed here.
+; C notation below treats a, b, c as uint8_t and hl as uint8_t *p.
+; Arithmetic/left shifts truncate to 8 bits; x, y, z, w denote the old state.
+	ld hl, wRandomSeed ; p = &state[0];                      // &x
+	ld a, [hli]       ; a = *p++;                           // a = x; p = &y
+	ld b, a           ; b = a;                              // save x
+	add a             ; a <<= 1;                            // x << 1
+	add a             ; a <<= 1;                            // x << 2
+	add a             ; a <<= 1;                            // x << 3
+	add a             ; a <<= 1;                            // x << 4
+	xor b             ; a ^= b;                             // x ^ (x << 4)
+	ld b, a           ; b = a;                              // b = t
+	ld a, [hld]       ; a = *p--;                           // a = y; p = &x
+	ld [hli], a       ; *p++ = a;                           // state[0] = y; p = &y
+	inc hl            ; ++p;                                // p = &z
+	ld a, [hld]       ; a = *p--;                           // a = z; p = &y
+	ld [hli], a       ; *p++ = a;                           // state[1] = z; p = &z
+	inc hl            ; ++p;                                // p = &w
+	ld a, [hld]       ; a = *p--;                           // a = w; p = &z
+	ld [hli], a       ; *p++ = a;                           // state[2] = w; p = &w
+	ld c, a           ; c = a;                              // save w for right shift
+	xor b             ; a ^= b;                             // w ^ t
+	srl c             ; c >>= 1;                            // w >> 1 (zero-fill)
+	xor c             ; a ^= c;                             // w ^ t ^ (w >> 1)
+	sla b             ; b <<= 1;                            // t << 1
+	xor b             ; a ^= b;                             // w ^ t ^ (w >> 1) ^ (t << 1)
+	ld [hl], a        ; *p = a;                             // state[3] = new w
+	ret               ; return a;
 ENDC
