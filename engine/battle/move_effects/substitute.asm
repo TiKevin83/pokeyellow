@@ -37,9 +37,12 @@ SubstituteEffect_:
 	sbc 0
 	pop bc
 	jr c, .notEnoughHP ; underflow means user would be left with negative health
-; Prevent leaving the user at 0 HP by also branching on the zero flag
+; Reject zero remaining HP using both bytes, preserving the high byte for storage.
 IF DEF(_BUGFIX)
+	ld e, a
+	or d
 	jr z, .notEnoughHP
+	ld a, e
 ENDC
 ; user has 0 or more HP
 	ld [hli], a ; save resulting HP after subtraction into current HP

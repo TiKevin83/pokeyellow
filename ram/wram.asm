@@ -2031,6 +2031,7 @@ wPikachuCollisionCounter:: db
 wd435:: db
 wPikachuFollowCommandBufferSize:: db
 wPikachuFollowCommandBuffer:: ds 16
+wPikachuFollowCommandBufferEnd::
 
 wExpressionNumber:: db
 wPikaPicAnimNumber:: db

@@ -1164,29 +1164,25 @@ ClearPikachuFollowCommandBuffer:
 
 AppendPikachuFollowCommandToBuffer:
 	ld hl, wPikachuFollowCommandBufferSize
-; Bugfixes for pikawalk
-; The game allocates 16 bytes of space for pikachu follow commands
-; But the original source has no bounds checking to ensure the buffer size
-; stays within the allocated bounds, opening up a buffer overflow exploit
-; by walking with pikachu asleep offscreen in the Pewter City Pokemon Center
-    inc [hl]
 IF DEF(_BUGFIX)
+	; Size is the last occupied index; $ff denotes an empty buffer.
+	; Reject a full buffer before changing the index, including after 256 steps.
 	push af
-	ld a, 15
-	cp [hl]
-	jp c, .skipAppending
+	ld a, [hl]
+	inc a
+	cp wPikachuFollowCommandBufferEnd - wPikachuFollowCommandBuffer
+	jr nc, .skipAppending
+	ld [hl], a
+	pop af
+ELSE
+	inc [hl]
 ENDC
 	ld e, [hl]
 	ld d, 0
 	ld hl, wPikachuFollowCommandBuffer
 	add hl, de
-; restore af from the skip check
-IF DEF(_BUGFIX)
-	pop af
-ENDC
 	ld [hl], a
 	ret
-; restore af from the skip check and return
 IF DEF(_BUGFIX)
 .skipAppending
 	pop af
@@ -1383,8 +1379,13 @@ Func_fcc64:
 Func_fcc92:
 	ld hl, wPikachuFollowCommandBufferSize
 	ld a, [hl]
+IF DEF(_BUGFIX)
+	cp wPikachuFollowCommandBufferEnd - wPikachuFollowCommandBuffer
+	jr nc, .asm_fccb0
+ELSE
 	cp $ff
 	jr z, .asm_fccb0
+ENDC
 	and a
 	jr z, .asm_fccb0
 	dec [hl]
@@ -1450,8 +1451,13 @@ ComputePikachuFacingDirection::
 GetPikachuFollowCommand:
 	ld hl, wPikachuFollowCommandBufferSize
 	ld a, [hl]
+IF DEF(_BUGFIX)
+	cp wPikachuFollowCommandBufferEnd - wPikachuFollowCommandBuffer
+	jr nc, .asm_fccff
+ELSE
 	cp $ff
 	jr z, .asm_fccff
+ENDC
 	ld e, a
 	ld d, 0
 	ld hl, wPikachuFollowCommandBuffer
@@ -1466,8 +1472,13 @@ GetPikachuFollowCommand:
 GetPikachuFollowCommandIfBufferSizeNonzero:
 	ld hl, wPikachuFollowCommandBufferSize
 	ld a, [hl]
+IF DEF(_BUGFIX)
+	cp wPikachuFollowCommandBufferEnd - wPikachuFollowCommandBuffer
+	jr nc, .default
+ELSE
 	cp $ff
 	jr z, .default
+ENDC
 	and a
 	jr z, .default
 	ld e, a
@@ -1483,8 +1494,16 @@ GetPikachuFollowCommandIfBufferSizeNonzero:
 
 AreThereAtLeastTwoStepsInPikachuFollowCommandBuffer:
 	ld a, [wPikachuFollowCommandBufferSize]
+IF DEF(_BUGFIX)
+	cp wPikachuFollowCommandBufferEnd - wPikachuFollowCommandBuffer
+	jr c, .validSize
+	and a ; invalid and empty buffers cannot contain queued steps
+	ret
+.validSize
+ELSE
 	cp $ff
 	ret z
+ENDC
 	cp $2
 	jr nc, .set_carry
 	and a

@@ -16,6 +16,13 @@ This version includes the ability to optionally compile with a set of bugfix pat
 
 `make BUGFIX=1`
 
+Use `make BUGFIX=0` (or plain `make`) for the original behavior. Switching
+`BUGFIX` automatically rebuilds the objects, so no clean is needed. This also
+applies to the debug and Virtual Console targets.
+
+The latest memory bounds, arithmetic, and saved-state fixes are documented in
+[Bugfix hardening](docs/bugfix-hardening.md), including emulator regression tests.
+
 Many of these patches are sourced from the research done on [pokered](https://github.com/pret/pokered/wiki/%5BARCHIVED%5D-Bugs-and-Glitches) which is now defunct and archived. Some patches were also written specifically for this project (badge boosts, fast options) and some were collaborations with other Pokemon Speedrun community members including CasualPokePlayer and luckytyphlosion (statistically validated PRNG).
 
 ## See also

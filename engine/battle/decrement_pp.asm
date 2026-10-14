@@ -4,6 +4,11 @@ DecrementPP:
 	cp STRUGGLE
 	ret z                ; if the pokemon is using "struggle", there's nothing to do
 	                     ; we don't decrement PP for "struggle"
+IF DEF(_BUGFIX)
+	ld a, [wPlayerMoveListIndex]
+	cp NUM_MOVES
+	ret nc ; never index beyond the four PP slots
+ENDC
 	ld hl, wPlayerBattleStatus1
 	ld a, [hli]          ; load the wPlayerBattleStatus1 pokemon status flags and increment hl to load the
 	                     ; wPlayerBattleStatus2 status flags later
@@ -31,6 +36,10 @@ DecrementPP:
 
 	ld hl, wPartyMon1PP  ; PP of first move (in party)
 	ld a, [wPlayerMonNumber] ; which mon in party is active
+IF DEF(_BUGFIX)
+	cp PARTY_LENGTH
+	ret nc
+ENDC
 	ld bc, PARTYMON_STRUCT_LENGTH
 	call AddNTimes       ; calculate address of the mon to modify
 .DecrementPP:
@@ -39,5 +48,10 @@ DecrementPP:
 	ld b, 0
 	add hl, bc           ; calculate the address in memory of the PP we need to decrement
 	                     ; based on the move chosen.
+IF DEF(_BUGFIX)
+	ld a, [hl]
+	and PP_MASK
+	ret z ; binding moves can be repeated at zero PP; preserve PP Up bits
+ENDC
 	dec [hl]             ; Decrement PP
 	ret

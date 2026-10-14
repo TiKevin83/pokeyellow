@@ -99,22 +99,33 @@ GetBattleTransitionID_WildOrTrainer:
 	ret
 
 GetBattleTransitionID_CompareLevels:
-	; This section fixes undefined behavior in the Pikachu cutscene
-	; Due to not yet having obtained a pokemon
 IF DEF(_BUGFIX)
+	; Scripted battles can have no party, or no conscious party member.
+	; Reject corrupt counts and bound the scan to the actual party.
 	ld a, [wPartyCount]
-	cp 0
+	and a
 	jr z, .highLevelEnemy
+	cp PARTY_LENGTH + 1
+	jr nc, .highLevelEnemy
+	push bc
+	ld b, a
 ENDC
 	ld hl, wPartyMon1HP
 .faintedLoop
 	ld a, [hli]
 	or [hl]
 	jr nz, .notFainted
+IF DEF(_BUGFIX)
+	dec b
+	jr z, .allFainted
+ENDC
 	ld de, PARTYMON_STRUCT_LENGTH - 1
 	add hl, de
 	jr .faintedLoop
 .notFainted
+IF DEF(_BUGFIX)
+	pop bc
+ENDC
 	ld de, MON_LEVEL - (MON_HP + 1)
 	add hl, de
 	ld a, [hl]
@@ -127,6 +138,10 @@ ENDC
 	ld a, 1
 	ld [wBattleTransitionSpiralDirection], a
 	ret
+IF DEF(_BUGFIX)
+.allFainted
+	pop bc
+ENDC
 .highLevelEnemy
 	set BIT_STRONGER_BATTLE_TRANSITION, c
 	xor a

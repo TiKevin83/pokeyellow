@@ -56,6 +56,7 @@ RGBGFXFLAGS  ?= -Weverything
 	clean \
 	tidy \
 	compare \
+	FORCE \
 	tools
 
 all: $(roms)
@@ -85,6 +86,7 @@ tidy:
 	      $(pokeyellow_obj) \
 	      $(pokeyellow_vc_obj) \
 	      $(pokeyellow_debug_obj) \
+	      .build-config .build-config.tmp \
 	      rgbdscheck.o
 	$(MAKE) clean -C tools/
 
@@ -104,6 +106,16 @@ endif
 ifeq ($(BUGFIX),1)
 RGBASMFLAGS += -D _BUGFIX
 endif
+
+# Reusing the same output names must not reuse objects from the other mode.
+# Only update the timestamp when the effective configuration changes.
+.build-config: FORCE
+	@printf 'BUGFIX=%s\nDEBUG=%s\n' '$(if $(filter 1,$(BUGFIX)),1,0)' '$(if $(filter 1,$(DEBUG)),1,0)' > $@.tmp
+	@cmp -s $@.tmp $@ && rm -f $@.tmp || mv -f $@.tmp $@
+
+FORCE:
+
+$(pokeyellow_obj) $(pokeyellow_debug_obj) $(pokeyellow_vc_obj): .build-config
 
 $(pokeyellow_debug_obj): RGBASMFLAGS += -D _DEBUG
 $(pokeyellow_vc_obj):    RGBASMFLAGS += -D _YELLOW_VC

@@ -4319,6 +4319,9 @@ GetDamageVarsForPlayerAttack:
 ; this allows values with up to 10 bits (values up to 1023) to be handled
 ; anything larger will wrap around
 .scaleStats
+IF DEF(_BUGFIX)
+	call CapBattleDefense
+ENDC
 	ld a, [hli]
 	ld l, [hl]
 	ld h, a ; hl = player's offensive stat
@@ -4432,6 +4435,9 @@ GetDamageVarsForEnemyAttack:
 ; this allows values with up to 10 bits (values up to 1023) to be handled
 ; anything larger will wrap around
 .scaleStats
+IF DEF(_BUGFIX)
+	call CapBattleDefense
+ENDC
 	ld a, [hli]
 	ld l, [hl]
 	ld h, a ; hl = enemy's offensive stat
@@ -4510,6 +4516,23 @@ GetEnemyMonStat:
 	pop de
 	ret
 
+IF DEF(_BUGFIX)
+; Reflect/Light Screen can double a valid stat beyond the ten-bit range
+; supported by damage scaling. Cap BC before narrowing it to one byte.
+; Preserve the attack pointer (HL), move power (D), and level (E).
+CapBattleDefense:
+	ld a, b
+	cp HIGH(MAX_STAT_VALUE)
+	ret c
+	jr nz, .cap
+	ld a, c
+	cp LOW(MAX_STAT_VALUE)
+	ret c
+.cap
+	ld bc, MAX_STAT_VALUE
+	ret
+ENDC
+
 CalculateDamage:
 ; input:
 ;   b: attack
@@ -4517,6 +4540,15 @@ CalculateDamage:
 ;   d: base power
 ;   e: level
 
+IF DEF(_BUGFIX)
+	; Scaling a defense of 1-3 can produce zero. Guard the divisor at its
+	; point of use, including callers such as confusion self-damage.
+	ld a, c
+	and a
+	jr nz, .nonzeroDefense
+	inc c
+.nonzeroDefense
+ENDC
 	ldh a, [hWhoseTurn] ; whose turn?
 	and a
 	ld a, [wPlayerMoveEffect]
@@ -5529,6 +5561,9 @@ MoveHitTest:
 	jr z, .checkForDigOrFlyStatus
 ; The fix for Swift broke this code. It's supposed to prevent HP draining moves from working on Substitutes.
 ; Since CheckTargetSubstitute overwrites a with either $00 or $01, it never works.
+IF DEF(_BUGFIX)
+	ld a, [de] ; reload the attacker's move effect after checking the target
+ENDC
 	cp DRAIN_HP_EFFECT
 	jp z, .moveMissed
 	cp DREAM_EATER_EFFECT

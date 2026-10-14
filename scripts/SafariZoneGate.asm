@@ -89,7 +89,11 @@ SafariZoneGateLeavingSafariScript:
 	xor a
 	ld [wNumSafariBalls], a
 	ld [wSafariSteps], a
+IF DEF(_BUGFIX)
+	ld [wSafariSteps + 1], a
+ELSE
 	ld [wSafariSteps], a ; ?????
+ENDC
 	ld a, PAD_DOWN
 	ld c, 3
 	call SafariZoneEntranceAutoWalk
@@ -116,7 +120,17 @@ SafariZoneGateSetScriptAfterMoveScript:
 	call SafariZoneGateReturnSimulatedJoypadStateScript
 	ret nz
 	call Delay3
+IF DEF(_BUGFIX)
+	; The next-script scratch byte is not saved. We can rebuild it from the
+	; event so choosing not to leave, saving and reloading is safe.
+	CheckEvent EVENT_IN_SAFARI_ZONE
+	ld a, SCRIPT_SAFARIZONEGATE_DEFAULT
+	jr z, .setScript
+	ld a, SCRIPT_SAFARIZONEGATE_LEAVING_SAFARI
+.setScript
+ELSE
 	ld a, [wNextSafariZoneGateScript]
+ENDC
 	ld [wSafariZoneGateCurScript], a
 	ret
 
