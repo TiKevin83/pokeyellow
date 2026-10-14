@@ -71,7 +71,7 @@ GateUpstairsScript_PrintIfFacingUp:
 	jr z, .up
 ; fix the route 12 gate binoculars
 IF DEF(_BUGFIX)
-	ld hl, TVWrongSideText
+	ld hl, RedsHouse1FPrintTVText.WrongSideText
 .up
 	call PrintText
 ELSE

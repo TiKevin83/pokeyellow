@@ -266,6 +266,6 @@ Route17CyclingRoadEndsSignText:
 ; fix the sign at Route 16 showing Celadon <-> Fuchsia when read from the front
 IF DEF(_BUGFIX)
 Route17Text17:
-	text_far _Route16Text9
+	text_far _Route16SignText
 	text_end
 ENDC

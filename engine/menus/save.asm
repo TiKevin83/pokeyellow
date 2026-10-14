@@ -5,9 +5,9 @@ TryLoadSaveFile:
 ; tell the user the save is corrupt if they turned off the power while saving
 ; and carry random state through power on/off
 IF DEF(_BUGFIX)
-	call EnableSRAMAndLatchClockData
+	call EnableSRAM
 	ld a, $1
-	ld [MBC1SRamBank], a
+	ld [rRAMB], a
 	ld a, [sSaveInProgress]
 	cp 1
 	jr z, .badsum
@@ -19,7 +19,7 @@ IF DEF(_BUGFIX)
 	ld [wRandomSeed+2], a
 	ld a, [sRandomSeed+3]
 	ld [wRandomSeed+3], a
-	call DisableSRAMAndPrepareClockData
+	call DisableSRAM
 ENDC
 	call LoadMainData
 	jr c, .badsum
@@ -180,9 +180,9 @@ SaveMenu:
 IF DEF(_BUGFIX)
 	ld hl, SavingText
 	call PrintText
-	call EnableSRAMAndLatchClockData
+	call EnableSRAM
 	ld a, $1
-	ld [MBC1SRamBank], a
+	ld [rRAMB], a
 	xor a
 	inc a
 	ld [sSaveInProgress], a
@@ -198,12 +198,12 @@ ENDC
 	call SaveGameData
 ; reset the saving in progress flag
 IF DEF(_BUGFIX)
-	call EnableSRAMAndLatchClockData
+	call EnableSRAM
 	ld a, $1
-	ld [MBC1SRamBank], a
+	ld [rRAMB], a
 	xor a
 	ld [sSaveInProgress], a
-	call DisableSRAMAndPrepareClockData
+	call DisableSRAM
 ELSE
 	ld hl, SavingText
 	call PrintText
